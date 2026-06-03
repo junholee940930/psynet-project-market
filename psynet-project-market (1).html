@@ -14,12 +14,19 @@
   .tabs { display: flex; padding: 0 16px; border-bottom: 1px solid #ddd; }
   .tab { padding: 14px 18px; font-size: 14px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1px; color: #888; }
   .tab.active { color: #111; border-bottom-color: #111; }
-  .content { padding: 0 0 60px; }
-  .season-panel { display: none; }
-  .season-panel.active { display: block; }
-  .count-info { padding: 14px 16px 10px; font-size: 12px; color: #888; }
+  .content { padding: 0 0 60px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; }
+  thead tr { border-bottom: 2px solid #111; }
+  th { padding: 12px 10px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; color: #555; white-space: nowrap; }
+  th:first-child { width: 36px; padding-left: 16px; }
+  tbody tr { border-bottom: 1px solid #eee; }
+  tbody tr:active { background: #f5f5f5; }
+  td { padding: 14px 10px; line-height: 1.5; vertical-align: middle; }
+  td:first-child { font-size: 11px; color: #aaa; font-weight: 500; padding-left: 16px; }
+  td:last-child { padding-right: 16px; }
+  .project-name { font-weight: 600; word-break: keep-all; }
   .badge { display: inline-block; padding: 3px 8px; border-radius: 2px; font-size: 11px; font-weight: 600; border: 1px solid #111; color: #111; background: #fff; white-space: nowrap; }
-  .members { display: flex; flex-wrap: wrap; gap: 4px; }
+  .members { display: flex; flex-wrap: wrap; gap: 4px; min-width: 80px; }
   .member-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; padding: 3px 7px; border-radius: 20px; border: 1px solid #e0e0e0; background: #fafafa; white-space: nowrap; }
   .member-chip.pm { background: #111; color: #fff; border-color: #111; }
   .member-share { font-size: 10px; opacity: 0.7; }
@@ -28,52 +35,36 @@
   .action-btn.eval { border-color: #555; color: #555; }
   .action-btn.eval:active { background: #555; color: #fff; }
   .action-none { color: #ccc; font-size: 13px; }
-
-  /* Mobile card layout (default) */
-  table { display: none; }
-  .card-list { padding: 0 16px; }
-  .card { border: 1px solid #eee; border-radius: 6px; padding: 16px; margin-bottom: 12px; background: #fff; }
-  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-  .card-num { font-size: 11px; color: #aaa; font-weight: 500; flex-shrink: 0; padding-top: 2px; }
-  .card-name { font-size: 15px; font-weight: 700; word-break: keep-all; flex: 1; line-height: 1.4; }
-  .card-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; font-size: 12px; color: #666; }
-  .card-pm { }
-  .card-members { margin-bottom: 10px; }
-  .card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-
-  /* Desktop table layout */
+  .season-panel { display: none; }
+  .season-panel.active { display: block; }
+  .count-info { padding: 14px 16px 10px; font-size: 12px; color: #888; }
   @media (min-width: 768px) {
     header { padding: 48px 40px 24px; }
     h1 { font-size: 28px; }
     .tabs { padding: 0 40px; }
     .tab { padding: 16px 24px; }
     .content { padding: 0 0 60px; }
-    .count-info { padding: 16px 40px 12px; }
-    table { display: table; width: 100%; border-collapse: collapse; font-size: 13px; }
-    .card-list { display: none; }
-    thead tr { border-bottom: 2px solid #111; }
-    th { padding: 12px 10px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; color: #555; white-space: nowrap; }
-    th:first-child { width: 36px; padding-left: 40px; }
-    tbody tr { border-bottom: 1px solid #eee; }
-    tbody tr:hover { background: #f9f9f9; }
-    td { padding: 13px 10px; line-height: 1.5; vertical-align: middle; }
-    td:first-child { font-size: 11px; color: #aaa; font-weight: 500; padding-left: 40px; }
+    table { min-width: unset; font-size: 13px; }
+    th:first-child { padding-left: 40px; }
+    td:first-child { padding-left: 40px; }
     td:last-child { padding-right: 40px; }
-    .project-name { font-weight: 600; word-break: keep-all; }
+    td { padding: 13px 10px; }
+    tbody tr:hover { background: #f9f9f9; }
     .action-btn:hover { background: #111; color: #fff; }
     .action-btn.eval:hover { background: #555; color: #fff; }
-    .members { min-width: 80px; }
+    .count-info { padding: 16px 40px 12px; }
   }
 
   /* Modal */
-  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: flex-end; justify-content: center; }
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; }
   .modal-bg.open { display: flex; }
-  .modal { background: #fff; width: 100%; max-height: 90vh; overflow-y: auto; border-radius: 12px 12px 0 0; box-shadow: 0 -4px 32px rgba(0,0,0,0.18); }
-  .modal-header { padding: 20px 20px 14px; border-bottom: 1px solid #eee; position: sticky; top: 0; background: #fff; z-index: 1; }
-  .modal-title { font-size: 16px; font-weight: 800; margin-bottom: 4px; padding-right: 32px; word-break: keep-all; }
+  .modal { background: #fff; width: 560px; max-width: 95vw; max-height: 85vh; overflow-y: auto; border-radius: 4px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+  .modal-header { padding: 24px 28px 16px; border-bottom: 1px solid #eee; position: sticky; top: 0; background: #fff; z-index: 1; }
+  .modal-title { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
   .modal-meta { font-size: 12px; color: #888; }
-  .modal-close { position: absolute; top: 18px; right: 20px; font-size: 22px; cursor: pointer; color: #aaa; border: none; background: none; font-family: inherit; line-height: 1; padding: 4px; }
-  .modal-body { padding: 18px 20px 32px; }
+  .modal-close { position: absolute; top: 20px; right: 24px; font-size: 20px; cursor: pointer; color: #aaa; border: none; background: none; font-family: inherit; line-height: 1; }
+  .modal-close:hover { color: #111; }
+  .modal-body { padding: 20px 28px 28px; }
   .eval-section { margin-bottom: 20px; }
   .eval-section:last-child { margin-bottom: 0; }
   .eval-section-title { font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
@@ -84,24 +75,11 @@
   .score-bar-fill { height: 100%; border-radius: 3px; background: #111; }
   .score-val { font-size: 13px; font-weight: 700; width: 28px; text-align: right; flex-shrink: 0; }
   .eval-comment { font-size: 12px; color: #555; line-height: 1.6; margin-top: 8px; padding: 10px 12px; background: #f8f8f8; border-radius: 3px; }
-
-  @media (min-width: 768px) {
-    .modal-bg { align-items: center; }
-    .modal { width: 560px; max-width: 95vw; max-height: 85vh; border-radius: 4px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
-    .modal-header { padding: 24px 28px 16px; }
-    .modal-title { font-size: 17px; padding-right: 40px; }
-    .modal-close { top: 20px; right: 24px; }
-    .modal-body { padding: 20px 28px 28px; }
-  }
-
   /* Apply modal */
   .apply-box { text-align: center; padding: 20px 0 8px; }
-  .apply-box p { font-size: 14px; color: #444; margin-bottom: 20px; line-height: 1.7; }
-  .apply-email-wrap { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-  .apply-email { display: inline-block; padding: 12px 28px; background: #111; color: #fff; font-size: 14px; font-weight: 600; border-radius: 3px; text-decoration: none; width: 100%; max-width: 280px; text-align: center; }
+  .apply-box p { font-size: 14px; color: #444; margin-bottom: 16px; line-height: 1.7; }
+  .apply-email { display: inline-block; padding: 10px 24px; background: #111; color: #fff; font-size: 14px; font-weight: 600; border-radius: 3px; text-decoration: none; }
   .apply-email:hover { background: #333; }
-  .apply-email.gmail { background: #fff; color: #111; border: 1px solid #ddd; }
-  .apply-email.gmail:hover { background: #f5f5f5; }
 </style>
 </head>
 <body>
@@ -124,7 +102,6 @@
       <thead><tr><th>#</th><th>프로젝트명</th><th>PM</th><th>참여자 및 지분</th><th>상태</th><th>참여하기</th></tr></thead>
       <tbody id="s2-body"></tbody>
     </table>
-    <div class="card-list" id="s2-cards"></div>
   </div>
   <!-- 시즌 1 -->
   <div id="s1" class="season-panel">
@@ -133,7 +110,6 @@
       <thead><tr><th>#</th><th>프로젝트명</th><th>PM</th><th>참여자 및 지분</th><th>상태</th><th>평가</th></tr></thead>
       <tbody id="s1-body"></tbody>
     </table>
-    <div class="card-list" id="s1-cards"></div>
   </div>
 </div>
 
@@ -321,18 +297,18 @@ function openEval(key, name) {
 function openApply(name) {
   document.getElementById('modalTitle').textContent = name;
   document.getElementById('modalMeta').textContent = '참여 신청';
-  const email = 'junholee940930@psynet.co.kr';
-  const subject = encodeURIComponent('[참여신청] ' + name);
-  const mailto = 'mailto:' + email + '?subject=' + subject;
-  const gmail = 'https://mail.google.com/mail/?view=cm&to=' + email + '&su=' + subject;
+  const mailto = 'mailto:junholee940930@psynet.co.kr?subject=' + encodeURIComponent('[참여신청] ' + name);
+  const box = document.createElement('div');
+  box.className = 'apply-box';
+  box.innerHTML = '<p>해당 프로젝트에 참여하려면<br>아래 이메일로 문의해 주세요.</p>';
+  const link = document.createElement('a');
+  link.className = 'apply-email';
+  link.href = mailto;
+  link.textContent = 'junholee940930@psynet.co.kr';
+  box.appendChild(link);
   const body = document.getElementById('modalBody');
-  body.innerHTML = `<div class="apply-box">
-    <p>해당 프로젝트에 참여하려면<br>아래 이메일로 문의해 주세요.</p>
-    <div class="apply-email-wrap">
-      <a class="apply-email" href="${mailto}">${email}</a>
-      <a class="apply-email gmail" href="${gmail}" target="_blank" rel="noopener">Gmail로 보내기</a>
-    </div>
-  </div>`;
+  body.innerHTML = '';
+  body.appendChild(box);
   document.getElementById('modalBg').classList.add('open');
 }
 
@@ -342,69 +318,42 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalDi
 
 function renderS1() {
   const tbody = document.getElementById('s1-body');
-  const cardList = document.getElementById('s1-cards');
-  let tableHtml = '';
-  let cardHtml = '';
+  let html = '';
   s1Data.forEach((p, i) => {
     const members = collabS1[p.key] || [];
     const chips = memberChips(members, true);
     const hasEval = !!evalData[p.key];
-    const evalBtn = hasEval
-      ? `<button class="action-btn eval" onclick="openEval('${p.key}','${p.name.replace(/'/g,"\\'")}')">평가보기</button>`
+    const evalCell = hasEval
+      ? `<button class="action-btn eval" onclick="openEval('${p.key}','${p.name.replace(/'/g,"\\'")}')">완료</button>`
       : `<span class="action-none">-</span>`;
-    tableHtml += `<tr>
+    html += `<tr>
       <td>${i+1}</td>
       <td class="project-name">${p.name}</td>
       <td>${p.pm}</td>
       <td>${chips}</td>
-      <td><span class="badge">${p.status}</span></td>
-      <td>${evalBtn}</td>
+      <td><span class="badge ${p.status}">${p.status}</span></td>
+      <td>${evalCell}</td>
     </tr>`;
-    cardHtml += `<div class="card">
-      <div class="card-top">
-        <span class="card-num">${i+1}</span>
-        <span class="card-name">${p.name}</span>
-        <span class="badge">${p.status}</span>
-      </div>
-      <div class="card-meta"><span class="card-pm">PM · ${p.pm}</span></div>
-      ${members.length ? `<div class="card-members">${chips}</div>` : ''}
-      <div class="card-bottom">${evalBtn}</div>
-    </div>`;
   });
-  tbody.innerHTML = tableHtml;
-  cardList.innerHTML = cardHtml;
+  tbody.innerHTML = html;
 }
 
 function renderS2() {
   const tbody = document.getElementById('s2-body');
-  const cardList = document.getElementById('s2-cards');
-  let tableHtml = '';
-  let cardHtml = '';
+  let html = '';
   s2Data.forEach((p, i) => {
     const members = collabS2[p.key] || [];
     const chips = memberChips(members, false);
-    const applyBtn = `<button class="action-btn" onclick="openApply('${p.name.replace(/'/g,"\\'")}')">참여하기</button>`;
-    tableHtml += `<tr>
+    html += `<tr>
       <td>${i+1}</td>
       <td class="project-name">${p.name}</td>
       <td>${p.pm}</td>
       <td>${chips}</td>
-      <td><span class="badge">${p.status}</span></td>
-      <td>${applyBtn}</td>
+      <td><span class="badge ${p.status}">${p.status}</span></td>
+      <td><button class="action-btn" onclick="openApply('${p.name.replace(/'/g,"\\'")}')">참여하기</button></td>
     </tr>`;
-    cardHtml += `<div class="card">
-      <div class="card-top">
-        <span class="card-num">${i+1}</span>
-        <span class="card-name">${p.name}</span>
-        <span class="badge">${p.status}</span>
-      </div>
-      <div class="card-meta"><span class="card-pm">PM · ${p.pm}</span></div>
-      ${members.length ? `<div class="card-members">${chips}</div>` : ''}
-      <div class="card-bottom">${applyBtn}</div>
-    </div>`;
   });
-  tbody.innerHTML = tableHtml;
-  cardList.innerHTML = cardHtml;
+  tbody.innerHTML = html;
 }
 
 function switchTab(season, el) {
