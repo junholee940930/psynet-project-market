@@ -18,7 +18,7 @@
   .season-panel { display: none; }
   .season-panel.active { display: block; }
   .count-info { padding: 14px 16px 10px; font-size: 12px; color: #888; }
-  .badge { display: inline-block; padding: 3px 8px; border-radius: 2px; font-size: 11px; font-weight: 600; border: 1px solid #111; color: #111; background: #fff; white-space: nowrap; }
+  .badge { display: inline-block; font-size: 12px; font-weight: 600; color: #555; white-space: nowrap; }
   .members { display: flex; flex-wrap: wrap; gap: 4px; }
   .member-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; padding: 3px 7px; border-radius: 20px; border: 1px solid #e0e0e0; background: #fafafa; white-space: nowrap; }
   .member-chip.pm { background: #111; color: #fff; border-color: #111; }
@@ -283,11 +283,19 @@ const s2Data = [
 ];
 
 function memberChips(members, showShare) {
-  if (!members || !members.length) return '-';
-  return '<div class="members">' + members.map(m => {
+  const nonPM = (members || []).filter(m => m.role !== 'PM');
+  if (!nonPM.length) return '-';
+  return '<div class="members">' + nonPM.map(m => {
     const shareText = showShare && m.share && m.share !== '0%' && m.share !== '0.00%' ? ` <span class="member-share">${m.share}</span>` : '';
-    return `<span class="member-chip ${m.role === 'PM' ? 'pm' : ''}">${m.name}${shareText}</span>`;
+    return `<span class="member-chip">${m.name}${shareText}</span>`;
   }).join('') + '</div>';
+}
+
+function pmCell(pmName, members) {
+  const pmData = (members || []).find(m => m.role === 'PM');
+  const share = pmData && pmData.share && pmData.share !== '0%' && pmData.share !== '0.00%'
+    ? ` <span class="member-share" style="font-size:11px;opacity:0.6;">${pmData.share}</span>` : '';
+  return `${pmName}${share}`;
 }
 
 function openEval(key, name) {
@@ -348,6 +356,7 @@ function renderS1() {
   s1Data.forEach((p, i) => {
     const members = collabS1[p.key] || [];
     const chips = memberChips(members, true);
+    const pm = pmCell(p.pm, members);
     const hasEval = !!evalData[p.key];
     const evalBtn = hasEval
       ? `<button class="action-btn eval" onclick="openEval('${p.key}','${p.name.replace(/'/g,"\\'")}')">평가보기</button>`
@@ -355,7 +364,7 @@ function renderS1() {
     tableHtml += `<tr>
       <td>${i+1}</td>
       <td class="project-name">${p.name}</td>
-      <td>${p.pm}</td>
+      <td>${pm}</td>
       <td>${chips}</td>
       <td><span class="badge">${p.status}</span></td>
       <td>${evalBtn}</td>
@@ -366,8 +375,8 @@ function renderS1() {
         <span class="card-name">${p.name}</span>
         <span class="badge">${p.status}</span>
       </div>
-      <div class="card-meta"><span class="card-pm">PM · ${p.pm}</span></div>
-      ${members.length ? `<div class="card-members">${chips}</div>` : ''}
+      <div class="card-meta"><span class="card-pm">PM · ${pm}</span></div>
+      ${memberChips(members, true) !== '-' ? `<div class="card-members">${chips}</div>` : ''}
       <div class="card-bottom">${evalBtn}</div>
     </div>`;
   });
@@ -383,11 +392,12 @@ function renderS2() {
   s2Data.forEach((p, i) => {
     const members = collabS2[p.key] || [];
     const chips = memberChips(members, false);
+    const pm = pmCell(p.pm, members);
     const applyBtn = `<button class="action-btn" onclick="openApply('${p.name.replace(/'/g,"\\'")}')">참여하기</button>`;
     tableHtml += `<tr>
       <td>${i+1}</td>
       <td class="project-name">${p.name}</td>
-      <td>${p.pm}</td>
+      <td>${pm}</td>
       <td>${chips}</td>
       <td><span class="badge">${p.status}</span></td>
       <td>${applyBtn}</td>
@@ -398,8 +408,8 @@ function renderS2() {
         <span class="card-name">${p.name}</span>
         <span class="badge">${p.status}</span>
       </div>
-      <div class="card-meta"><span class="card-pm">PM · ${p.pm}</span></div>
-      ${members.length ? `<div class="card-members">${chips}</div>` : ''}
+      <div class="card-meta"><span class="card-pm">PM · ${pm}</span></div>
+      ${chips !== '-' ? `<div class="card-members">${chips}</div>` : ''}
       <div class="card-bottom">${applyBtn}</div>
     </div>`;
   });
