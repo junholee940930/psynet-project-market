@@ -331,14 +331,12 @@ function openApply(name) {
   document.getElementById('modalMeta').textContent = '참여 신청';
   const email = 'junholee940930@psynet.co.kr';
   const subject = encodeURIComponent('[참여신청] ' + name);
-  const mailto = 'mailto:' + email + '?subject=' + subject;
   const gmail = 'https://mail.google.com/mail/?view=cm&to=' + email + '&su=' + subject;
   const body = document.getElementById('modalBody');
   body.innerHTML = `<div class="apply-box">
     <p>해당 프로젝트에 참여하려면<br>아래 이메일로 문의해 주세요.</p>
     <div class="apply-email-wrap">
-      <a class="apply-email" href="${mailto}">${email}</a>
-      <a class="apply-email gmail" href="${gmail}" target="_blank" rel="noopener">Gmail로 보내기</a>
+      <a class="apply-email" href="${gmail}" target="_blank" rel="noopener">${email}</a>
     </div>
   </div>`;
   document.getElementById('modalBg').classList.add('open');
