@@ -283,11 +283,11 @@ const s2Data = [
 ];
 
 function memberChips(members, showShare) {
-  const nonPM = (members || []).filter(m => m.role !== 'PM');
-  if (!nonPM.length) return '-';
-  return '<div class="members">' + nonPM.map(m => {
+  if (!members || !members.length) return '-';
+  return '<div class="members">' + members.map(m => {
     const shareText = showShare && m.share && m.share !== '0%' && m.share !== '0.00%' ? ` <span class="member-share">${m.share}</span>` : '';
-    return `<span class="member-chip">${m.name}${shareText}</span>`;
+    const pmLabel = m.role === 'PM' ? '<span class="member-share">PM</span> ' : '';
+    return `<span class="member-chip ${m.role === 'PM' ? 'pm' : ''}">${pmLabel}${m.name}${shareText}</span>`;
   }).join('') + '</div>';
 }
 
