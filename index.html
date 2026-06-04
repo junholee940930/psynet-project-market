@@ -121,7 +121,7 @@
   <div id="s2" class="season-panel active">
     <div class="count-info">총 42개 프로젝트</div>
     <table>
-      <thead><tr><th>#</th><th>프로젝트명</th><th>PM</th><th>참여자 및 지분</th><th>상태</th><th>참여하기</th></tr></thead>
+      <thead><tr><th>#</th><th>프로젝트명</th><th>참여자 및 지분</th><th>상태</th><th>참여하기</th></tr></thead>
       <tbody id="s2-body"></tbody>
     </table>
     <div class="card-list" id="s2-cards"></div>
@@ -130,7 +130,7 @@
   <div id="s1" class="season-panel">
     <div class="count-info">총 78개 프로젝트</div>
     <table>
-      <thead><tr><th>#</th><th>프로젝트명</th><th>PM</th><th>참여자 및 지분</th><th>상태</th><th>평가</th></tr></thead>
+      <thead><tr><th>#</th><th>프로젝트명</th><th>참여자 및 지분</th><th>상태</th><th>평가</th></tr></thead>
       <tbody id="s1-body"></tbody>
     </table>
     <div class="card-list" id="s1-cards"></div>
@@ -362,7 +362,6 @@ function renderS1() {
     tableHtml += `<tr>
       <td>${i+1}</td>
       <td class="project-name">${p.name}</td>
-      <td>${pm}</td>
       <td>${chips}</td>
       <td><span class="badge">${p.status}</span></td>
       <td>${evalBtn}</td>
@@ -373,8 +372,7 @@ function renderS1() {
         <span class="card-name">${p.name}</span>
         <span class="badge">${p.status}</span>
       </div>
-      <div class="card-meta"><span class="card-pm">PM · ${pm}</span></div>
-      ${memberChips(members, true) !== '-' ? `<div class="card-members">${chips}</div>` : ''}
+      ${chips !== '-' ? `<div class="card-members">${chips}</div>` : ''}
       <div class="card-bottom">${evalBtn}</div>
     </div>`;
   });
@@ -395,7 +393,6 @@ function renderS2() {
     tableHtml += `<tr>
       <td>${i+1}</td>
       <td class="project-name">${p.name}</td>
-      <td>${pm}</td>
       <td>${chips}</td>
       <td><span class="badge">${p.status}</span></td>
       <td>${applyBtn}</td>
@@ -406,7 +403,6 @@ function renderS2() {
         <span class="card-name">${p.name}</span>
         <span class="badge">${p.status}</span>
       </div>
-      <div class="card-meta"><span class="card-pm">PM · ${pm}</span></div>
       ${chips !== '-' ? `<div class="card-members">${chips}</div>` : ''}
       <div class="card-bottom">${applyBtn}</div>
     </div>`;
