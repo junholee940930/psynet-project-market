@@ -102,9 +102,60 @@
   .apply-email:hover { background: #333; }
   .apply-email.gmail { background: #fff; color: #111; border: 1px solid #ddd; }
   .apply-email.gmail:hover { background: #f5f5f5; }
+
+  /* D-day 티저 오버레이 — 정식 오픈 전 블러 커버 */
+  #dday-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px; padding: 24px; text-align: center;
+    background: rgba(255,255,255,0.72);
+    -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+  }
+  #dday-overlay .dday-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #888;
+  }
+  #dday-overlay .dday-dot { width: 6px; height: 6px; border-radius: 50%; background: #00c2b3; }
+  #dday-overlay .dday-count {
+    font-size: 64px; font-weight: 800; letter-spacing: -0.02em; color: #111; line-height: 1;
+  }
+  #dday-overlay .dday-title {
+    font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #111; max-width: 320px; line-height: 1.3;
+  }
+  #dday-overlay .dday-sub {
+    font-size: 13.5px; color: #555; max-width: 300px; line-height: 1.6; margin-top: -8px;
+  }
+  #dday-overlay .dday-footer { font-size: 11px; color: #999; margin-top: 4px; }
+  @media (min-width: 768px) {
+    #dday-overlay .dday-count { font-size: 80px; }
+    #dday-overlay .dday-title { font-size: 30px; }
+  }
 </style>
 </head>
 <body>
+
+<div id="dday-overlay" role="dialog" aria-modal="true" aria-label="정식 오픈 예정 안내">
+  <div class="dday-label"><span class="dday-dot"></span>정식 오픈까지</div>
+  <div class="dday-count" id="dday-count">D-31</div>
+  <div class="dday-title">데이터는 이미 준비됐다</div>
+  <div class="dday-sub">실제 경기 데이터를 조합해 지금까지 없던 인사이트를 보여드립니다</div>
+  <div class="dday-footer">mitocreate · 2026년 8월 1일 오픈</div>
+</div>
+<script>
+(function () {
+  var LAUNCH_AT = new Date("2026-08-01T00:00:00+09:00").getTime();
+  function render() {
+    var el = document.getElementById("dday-count");
+    var overlay = document.getElementById("dday-overlay");
+    var diff = LAUNCH_AT - Date.now();
+    if (diff <= 0) { overlay.style.display = "none"; return; }
+    var days = Math.max(1, Math.ceil(diff / 86400000));
+    el.textContent = "D-" + days;
+  }
+  render();
+  setInterval(render, 60000);
+})();
+</script>
 
 <header>
   <h1>사이넷 프로젝트 마켓</h1>
