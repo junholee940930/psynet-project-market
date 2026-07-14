@@ -171,6 +171,7 @@ function nlToCommand(
     const stop = [
       "찾아줘", "추천해줘", "추천", "매칭해줘", "매칭", "할만한거", "있어?", "있나", "뭐가있어",
       "프로젝트", "좀", "해줘", "알려줘", "보여줘", "?", "관련된", "관련", "분야", "쪽으로", "쪽", "등의", "등",
+      "나와 맞는", "나한테 맞는", "나한테", "나와", "맞는", "적합한", "어울리는", "괜찮은",
     ];
     let remain = text;
     for (const s of stop) remain = remain.split(s).join("");
@@ -284,7 +285,10 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
       const skills = user?.skills ?? [];
       const hasHistory = (user?.completed_projects.length ?? 0) > 0;
       const results = listProjects()
-        .filter((p) => keywordTokens.every((t) => p.title.includes(t)))
+        .filter((p) => {
+          const haystack = `${p.title} ${p.required_skills.join(" ")}`;
+          return keywordTokens.every((t) => haystack.includes(t));
+        })
         .map((p) => {
           const overlap = p.required_skills.filter((s) => skills.includes(s));
           const label = hasHistory ? gradeFor(skills, p.required_skills) : "신규";
