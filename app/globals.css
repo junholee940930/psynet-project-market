@@ -74,11 +74,9 @@ a {
   height: min(640px, 80vh);
   display: flex;
   flex-direction: column;
-  background: #0a0f0c;
   border: 1px solid #1e2e22;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
 }
 
 #titlebar {
@@ -86,7 +84,6 @@ a {
   align-items: center;
   gap: 8px;
   padding: 11px 14px;
-  background: #10160f;
   border-bottom: 1px solid #1e2e22;
   flex-shrink: 0;
 }
