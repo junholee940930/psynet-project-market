@@ -1,65 +1,38 @@
-import { supabase } from "@/lib/supabase";
-import { listProjects } from "@/lib/projects";
+import { supabase, type ApplicationRow } from "@/lib/supabase";
+import { listProjects, type Project } from "@/lib/projects";
 
-export type AdminSummary = {
-  totalProjects: number;
-  statusCount: { confirmed: number; negotiating: number; empty: number };
-  participants: {
-    name: string;
-    joined: number;
-    proposedSum: number;
-    confirmedSum: number;
-    projects: string[];
-  }[];
+export type ProjectApplications = {
+  project: Project;
+  applications: ApplicationRow[];
 };
 
-export async function getAdminSummary(): Promise<AdminSummary> {
+export async function getAdminApplications(): Promise<ProjectApplications[]> {
   const projects = listProjects();
-  const { data: allRows, error } = await supabase.from("negotiations").select("*");
+  const { data, error } = await supabase
+    .from("applications")
+    .select("*")
+    .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
 
-  const rowsByProject = new Map<string, typeof allRows>();
-  for (const row of allRows ?? []) {
-    const list = rowsByProject.get(row.project_id) ?? [];
+  const byProject = new Map<string, ApplicationRow[]>();
+  for (const row of data ?? []) {
+    const list = byProject.get(row.project_id) ?? [];
     list.push(row);
-    rowsByProject.set(row.project_id, list);
+    byProject.set(row.project_id, list);
   }
 
-  const statusCount = { confirmed: 0, negotiating: 0, empty: 0 };
-  const participantMap = new Map<
-    string,
-    { joined: number; proposedSum: number; confirmedSum: number; projects: string[] }
-  >();
-
+  const result: ProjectApplications[] = [];
   for (const project of projects) {
-    const rows = rowsByProject.get(project.id) ?? [];
-    if (!rows.length) {
-      statusCount.empty++;
-      continue;
-    }
-    const total = rows.reduce((s, r) => s + r.proposed_equity, 0);
-    const allConfirmed = rows.every((r) => r.status === "confirmed");
-    if (total === 100 && allConfirmed) statusCount.confirmed++;
-    else statusCount.negotiating++;
-
-    for (const row of rows) {
-      const stat = participantMap.get(row.participant) ?? {
-        joined: 0,
-        proposedSum: 0,
-        confirmedSum: 0,
-        projects: [],
-      };
-      stat.joined++;
-      stat.proposedSum += row.proposed_equity;
-      if (row.status === "confirmed") stat.confirmedSum += row.proposed_equity;
-      stat.projects.push(`${project.title}(${row.proposed_equity}%,${row.status})`);
-      participantMap.set(row.participant, stat);
-    }
+    const applications = byProject.get(project.id);
+    if (applications && applications.length) result.push({ project, applications });
   }
 
-  const participants = [...participantMap.entries()]
-    .map(([name, stat]) => ({ name, ...stat }))
-    .sort((a, b) => b.confirmedSum - a.confirmedSum);
+  // 대기중인 신청이 있는 프로젝트를 위로
+  result.sort((a, b) => {
+    const aPending = a.applications.some((x) => x.status === "pending") ? 0 : 1;
+    const bPending = b.applications.some((x) => x.status === "pending") ? 0 : 1;
+    return aPending - bPending;
+  });
 
-  return { totalProjects: projects.length, statusCount, participants };
+  return result;
 }

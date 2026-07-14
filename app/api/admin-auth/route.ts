@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
-    path: "/admin",
+    // "/admin" 페이지뿐 아니라 "/api/admin-applications"(수락·거절) 요청에도 실려야 하므로
+    // 사이트 전체 경로로 설정. httpOnly + 토큰이 비밀번호의 해시값이라는 점으로 보호.
+    path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
   return res;
@@ -25,6 +27,6 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
-  res.cookies.delete({ name: ADMIN_COOKIE, path: "/admin" });
+  res.cookies.delete({ name: ADMIN_COOKIE, path: "/" });
   return res;
 }

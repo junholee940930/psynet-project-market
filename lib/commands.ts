@@ -5,10 +5,14 @@
 // 매 요청마다 넘기고, 응답으로 갱신된 값을 돌려받아 다음 요청에 다시 실어보낸다.
 // 로그인도 같은 이유로 서버 세션이 아니라 클라이언트가 들고 있는 {name, phone}을 매 요청마다
 // 실어보내는 방식이다 — 비밀번호 없는 자가등록형이라 phone이 곧 계정 식별자.
+//
+// 지분 협의(퍼센트/다중참여/확정)는 제거됨 — 검색(매칭)과 신청만 남긴다.
+// 신청 수락/거절은 터미널이 아니라 /admin 대시보드(비밀번호 보호)에서 처리한다.
 
-import { supabase, type NegotiationRow } from "@/lib/supabase";
+import { supabase, type ApplicationRow } from "@/lib/supabase";
 import { getProject, gradeFor, listProjects, type Project } from "@/lib/projects";
 import { extractEmail, extractPhone, findOrCreateUser, getUserByPhone, normalizePhone, type Session } from "@/lib/auth";
+import { getOwnedProjectIds } from "@/lib/pmMap";
 
 export type CommandContext = {
   session: Session | null;
@@ -23,7 +27,7 @@ export type CommandResult = {
 };
 
 const KNOWN_CMDS = new Set([
-  "도움말", "help", "프로필", "스킬", "매칭", "방", "참여", "다중참여", "확정", "개수", "로그인", "로그아웃",
+  "도움말", "help", "프로필", "스킬", "매칭", "방", "신청", "개수", "로그인", "로그아웃", "내신청", "내프로젝트",
 ]);
 
 function resolveProjectIdScored(text: string): { id: string | null; score: number } {
@@ -70,7 +74,6 @@ function tryParseLogin(text: string): string | null {
   let name = nameMatch ? nameMatch[1] : null;
 
   if (!name) {
-    // "로그인" "전화번호" "이메일" 등 잡토큰과 전화/이메일 문자열을 지우고 남는 순수 한글 토큰을 이름으로 추정
     let remain = text;
     if (email) remain = remain.replace(email, " ");
     remain = remain.replace(/01[0-9][-\s]?\d{3,4}[-\s]?\d{4}/, " ");
@@ -110,37 +113,29 @@ function nlToCommand(
     return { command: "개수", lastProjectId };
   }
 
-  const multi = [...text.matchAll(/([가-힣A-Za-z]{2,8})\s*(\d{1,3})\s*%/g)];
-  if (multi.length >= 2 && ["추가", "참여", "지분", "넣", "등록"].some((k) => text.includes(k))) {
-    const target = pickTarget(text, pid, lastProjectId);
-    if (target) {
-      const pairs = multi.map((m) => `${m[1]}:${m[2]}`).join(",");
-      return { command: `다중참여 ${target} ${pairs}`, lastProjectId: target };
-    }
+  // "내 신청" / "내 프로젝트"는 특정 프로젝트를 안 가리키므로 아래 프로젝트별 현황/신청
+  // 분기보다 먼저 체크해야 함(안 그러면 "신청"/"현황" 키워드에 걸려 엉뚱한 프로젝트로 샘).
+  if (["내 신청", "내가 신청", "신청한 거", "신청 목록", "내 신청현황"].some((k) => text.includes(k))) {
+    return { command: "내신청", lastProjectId };
   }
-
-  const pctMatch = text.match(/(\d{1,3})\s*%/);
-  const pct = pctMatch ? pctMatch[1] : null;
-
-  if (["확정", "합의됐", "다 됐", "끝내자", "마무리"].some((k) => text.includes(k))) {
-    const target = pickTarget(text, pid, lastProjectId);
-    if (target) return { command: `확정 ${target}`, lastProjectId: target };
+  if (["내 프로젝트", "내프로젝트", "누가 신청했", "신청자 누구", "신청자 확인"].some((k) => text.includes(k))) {
+    return { command: "내프로젝트", lastProjectId };
   }
 
   if (
-    ["현황", "상태", "협의방", "누구"].some((k) => text.includes(k)) ||
+    ["현황", "상태", "누구", "신청자"].some((k) => text.includes(k)) ||
     (pid && ["보여줘", "어때"].some((k) => text.includes(k)))
   ) {
     const target = pickTarget(text, pid, lastProjectId);
     if (target) return { command: `방 ${target}`, lastProjectId: target };
   }
 
-  if (pct && ["참여", "지분", "넣고", "제안", "들어가", "하고싶"].some((k) => text.includes(k))) {
+  if (["신청", "지원", "참여", "들어가", "하고싶", "관심있"].some((k) => text.includes(k))) {
     const target = pickTarget(text, pid, lastProjectId);
     if (target) {
       const nameMatch = text.match(/(?:내\s*이름은|나는)\s*([가-힣A-Za-z0-9]+)/);
       const name = nameMatch ? nameMatch[1] : session?.name ?? "나";
-      return { command: `참여 ${target} ${name} 참여자 ${pct}`, lastProjectId: target };
+      return { command: `신청 ${target} ${name}`, lastProjectId: target };
     }
   }
 
@@ -173,28 +168,32 @@ function nlToCommand(
   return { command: null, lastProjectId };
 }
 
-async function readNeg(projectId: string): Promise<NegotiationRow[]> {
+async function readApps(projectId: string): Promise<ApplicationRow[]> {
   const { data, error } = await supabase
-    .from("negotiations")
+    .from("applications")
     .select("*")
     .eq("project_id", projectId)
     .order("created_at", { ascending: true });
-  if (error) throw new Error(`협의 기록 조회 실패: ${error.message}`);
+  if (error) throw new Error(`신청 현황 조회 실패: ${error.message}`);
   return data ?? [];
 }
 
-function roomLines(rows: NegotiationRow[], title: string): string[] {
+const STATUS_LABEL: Record<ApplicationRow["status"], string> = {
+  pending: "대기중",
+  accepted: "수락됨",
+  rejected: "거절됨",
+};
+
+function roomLines(rows: ApplicationRow[], title: string): string[] {
   const out: string[] = [];
   if (!rows.length) {
-    out.push(`『${title}』 협의 기록 없음. "여기 20% 지분 넣고싶어" 처럼 말해봐.`);
+    out.push(`『${title}』 신청 기록 없음. "여기 신청할래" 처럼 말해봐.`);
     return out;
   }
-  const total = rows.reduce((s, r) => s + r.proposed_equity, 0);
-  out.push(`『${title}』 협의 현황:`);
+  out.push(`『${title}』 신청 현황 (${rows.length}명):`);
   for (const r of rows) {
-    out.push(`  ${r.participant.padEnd(8, " ")} ${r.role.padEnd(6, " ")} ${r.proposed_equity}%  [${r.status}]`);
+    out.push(`  ${r.applicant.padEnd(8, " ")} ${r.role.padEnd(6, " ")} [${STATUS_LABEL[r.status]}]`);
   }
-  out.push(`합계 ${total}%  ${total === 100 ? "✅ 100% 일치" : `⚠ ${100 - total}%p 부족/초과`}`);
   return out;
 }
 
@@ -221,7 +220,7 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
 
   try {
     if (cmd === "도움말" || cmd === "help") {
-      out.push('사용법: 프로젝트명을 그대로 말하면 됨. 예) "다크모드 프로젝트 찾아줘" / "거기 20% 지분 넣고싶어" / "확정하자" / 스킬 <a,b,c> / 로그인 <이름> <전화번호> [이메일]');
+      out.push('사용법: 프로젝트명을 그대로 말하면 됨. 예) "다크모드 프로젝트 찾아줘" / "거기 신청할래" / "현황 어때?" / "내 신청 보여줘" / "내 프로젝트에 누가 신청했어?" / 스킬 <a,b,c> / 로그인 <이름> <전화번호>');
     } else if (cmd === "로그인") {
       const name = parts[1];
       const phone = parts[2] ? normalizePhone(parts[2]) : null;
@@ -292,79 +291,74 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
       if (!project) {
         out.push(`알 수 없는 프로젝트: ${pid}`);
       } else {
-        const rows = await readNeg(pid);
+        const rows = await readApps(pid);
         out.push(...roomLines(rows, project.title));
         lastProjectId = pid;
       }
-    } else if (cmd === "참여" && parts.length >= 5) {
-      const [pid, name, role, equity] = [parts[1], parts[2], parts[3], parts[4]];
-      const project = getProject(pid);
-      if (!project) {
-        out.push(`알 수 없는 프로젝트: ${pid}`);
-      } else {
-        const { error } = await supabase.from("negotiations").insert({
-          project_id: pid,
-          participant: name,
-          role,
-          proposed_equity: Number(equity),
-          status: "proposed",
-        });
-        if (error) throw new Error(error.message);
-        const rows = await readNeg(pid);
-        const total = rows.reduce((s, r) => s + r.proposed_equity, 0);
-        out.push(`『${project.title}』에 ${name}(${role}) 지분 ${equity}% 제안 등록됨.`);
-        out.push(`현재 합계 ${total}%  ${total === 100 ? "✅ 100% 일치" : `⚠ 100%까지 ${100 - total}%p 남음`}`);
-        lastProjectId = pid;
-      }
-    } else if (cmd === "다중참여" && parts.length >= 3) {
+    } else if (cmd === "신청" && parts.length >= 3) {
       const pid = parts[1];
+      const name = parts[2];
+      const role = parts[3] ?? "참여자";
       const project = getProject(pid);
       if (!project) {
         out.push(`알 수 없는 프로젝트: ${pid}`);
       } else {
-        const pairs = parts[2].split(",").filter((p) => p.includes(":"));
-        const added: string[] = [];
-        for (const pair of pairs) {
-          const [name, equity] = pair.split(":");
-          const { error } = await supabase.from("negotiations").insert({
+        const existing = (await readApps(pid)).find((r) => r.applicant === name);
+        if (existing && existing.status !== "rejected") {
+          out.push(`『${project.title}』에 이미 신청했어 (상태: ${STATUS_LABEL[existing.status]}).`);
+        } else {
+          const { error } = await supabase.from("applications").insert({
             project_id: pid,
-            participant: name,
-            role: "참여자",
-            proposed_equity: Number(equity),
-            status: "proposed",
+            applicant: name,
+            role,
+            status: "pending",
           });
           if (error) throw new Error(error.message);
-          added.push(`${name} ${equity}%`);
+          out.push(`『${project.title}』에 ${name}(${role}) 신청 등록됨. PM 수락을 기다려줘.`);
         }
-        const rows = await readNeg(pid);
-        const total = rows.reduce((s, r) => s + r.proposed_equity, 0);
-        out.push(`『${project.title}』에 ${added.join(", ")} 등록됨.`);
-        out.push(`현재 합계 ${total}%  ${total === 100 ? "✅ 100% 일치" : `⚠ 100%까지 ${100 - total}%p 남음`}`);
         lastProjectId = pid;
       }
-    } else if (cmd === "확정" && parts.length >= 2) {
-      const pid = parts[1];
-      const project = getProject(pid);
-      if (!project) {
-        out.push(`알 수 없는 프로젝트: ${pid}`);
+    } else if (cmd === "내신청") {
+      if (!ctx.session) {
+        out.push(`아직 로그인 안 했어. ${LOGIN_HELP}`);
       } else {
-        const rows = await readNeg(pid);
+        const { data, error } = await supabase
+          .from("applications")
+          .select("*")
+          .eq("applicant", ctx.session.name)
+          .order("created_at", { ascending: true });
+        if (error) throw new Error(error.message);
+        const rows = (data ?? []) as ApplicationRow[];
         if (!rows.length) {
-          out.push(`『${project.title}』 협의 기록 없음.`);
+          out.push('신청한 프로젝트 없음. "다크모드 프로젝트 신청할래"처럼 말해봐.');
         } else {
-          const total = rows.reduce((s, r) => s + r.proposed_equity, 0);
-          if (total !== 100) {
-            out.push(`『${project.title}』 합계 ${total}% — 100% 아니면 확정 불가.`);
-          } else {
-            const { error } = await supabase
-              .from("negotiations")
-              .update({ status: "confirmed" })
-              .eq("project_id", pid);
-            if (error) throw new Error(error.message);
-            out.push(`『${project.title}』 전원 확정 완료.`);
+          out.push(`내 신청 현황 (${rows.length}건):`);
+          for (const r of rows) {
+            out.push(`  ${projectTitle(r.project_id).padEnd(20, " ")} [${STATUS_LABEL[r.status]}]`);
           }
         }
-        lastProjectId = pid;
+      }
+    } else if (cmd === "내프로젝트") {
+      if (!ctx.session) {
+        out.push(`아직 로그인 안 했어. ${LOGIN_HELP}`);
+      } else {
+        const ownedIds = await getOwnedProjectIds(ctx.session.name);
+        if (!ownedIds.length) {
+          out.push("PM으로 등록된 프로젝트 없음.");
+        } else {
+          let total = 0;
+          for (const pid of ownedIds) {
+            const rows = await readApps(pid);
+            if (!rows.length) continue;
+            total += rows.length;
+            out.push(`『${projectTitle(pid)}』`);
+            for (const r of rows) {
+              out.push(`  ${r.applicant.padEnd(8, " ")} ${r.role.padEnd(6, " ")} [${STATUS_LABEL[r.status]}]`);
+            }
+          }
+          if (!total) out.push("내 프로젝트에 아직 신청자 없음.");
+          else out.push(`(수락/거절은 /admin 에서 처리)`);
+        }
       }
     } else {
       out.push(`모르는 명령어: ${line}  ('도움말' 입력)`);

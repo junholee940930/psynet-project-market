@@ -22,13 +22,13 @@ export const supabase = new Proxy({} as SupabaseClient, {
   },
 });
 
-export type NegotiationRow = {
+export type ApplicationRow = {
   id: number;
   project_id: string;
-  participant: string;
+  applicant: string;
   role: string;
-  proposed_equity: number;
-  status: "proposed" | "confirmed";
+  message: string | null;
+  status: "pending" | "accepted" | "rejected";
   created_at: string;
 };
 
