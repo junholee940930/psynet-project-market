@@ -7,7 +7,9 @@
 // 실어보내는 방식이다 — 비밀번호 없는 자가등록형이라 phone이 곧 계정 식별자.
 //
 // 지분 협의(퍼센트/다중참여/확정)는 제거됨 — 검색(매칭)과 신청만 남긴다.
-// 신청 수락/거절은 터미널이 아니라 /admin 대시보드(비밀번호 보호)에서 처리한다.
+// PM과 관리자는 역할이 다르다: PM은 터미널에서 본인이 PM인 프로젝트의 신청을
+// 수락/거절할 수 있고(project_pm_map으로 소유권 확인), 관리자는 /admin
+// 대시보드(비밀번호 보호)에서 전체 프로젝트 현황을 본다.
 
 import { supabase, type ApplicationRow } from "@/lib/supabase";
 import { getProject, gradeFor, listProjects, type Project } from "@/lib/projects";
@@ -27,7 +29,8 @@ export type CommandResult = {
 };
 
 const KNOWN_CMDS = new Set([
-  "도움말", "help", "프로필", "스킬", "매칭", "방", "신청", "개수", "로그인", "로그아웃", "내신청", "내프로젝트",
+  "도움말", "help", "프로필", "스킬", "매칭", "방", "신청", "개수", "로그인", "로그아웃",
+  "내신청", "내프로젝트", "수락", "거절",
 ]);
 
 function resolveProjectIdScored(text: string): { id: string | null; score: number } {
@@ -120,6 +123,16 @@ function nlToCommand(
   }
   if (["내 프로젝트", "내프로젝트", "누가 신청했", "신청자 누구", "신청자 확인"].some((k) => text.includes(k))) {
     return { command: "내프로젝트", lastProjectId };
+  }
+
+  // PM이 자기 프로젝트 신청자를 수락/거절. "<이름> 수락해줘" / "<이름>님 거절" 형태.
+  const acceptMatch = text.match(/([가-힣A-Za-z0-9]{2,10})\s*님?\s*(?:을|를)?\s*(수락|승인)/);
+  if (acceptMatch) {
+    return { command: `수락 ${acceptMatch[1]}`, lastProjectId };
+  }
+  const rejectMatch = text.match(/([가-힣A-Za-z0-9]{2,10})\s*님?\s*(?:을|를)?\s*(거절|반려)/);
+  if (rejectMatch) {
+    return { command: `거절 ${rejectMatch[1]}`, lastProjectId };
   }
 
   if (
@@ -220,7 +233,7 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
 
   try {
     if (cmd === "도움말" || cmd === "help") {
-      out.push('사용법: 프로젝트명을 그대로 말하면 됨. 예) "다크모드 프로젝트 찾아줘" / "거기 신청할래" / "현황 어때?" / "내 신청 보여줘" / "내 프로젝트에 누가 신청했어?" / 스킬 <a,b,c> / 로그인 <이름> <전화번호>');
+      out.push('사용법: 프로젝트명을 그대로 말하면 됨. 예) "다크모드 프로젝트 찾아줘" / "거기 신청할래" / "현황 어때?" / "내 신청 보여줘" / "내 프로젝트에 누가 신청했어?" / "<이름> 수락해줘"(PM 전용) / 스킬 <a,b,c> / 로그인 <이름> <전화번호>');
     } else if (cmd === "로그인") {
       const name = parts[1];
       const phone = parts[2] ? normalizePhone(parts[2]) : null;
@@ -357,7 +370,45 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
             }
           }
           if (!total) out.push("내 프로젝트에 아직 신청자 없음.");
-          else out.push(`(수락/거절은 /admin 에서 처리)`);
+          else out.push(`("<이름> 수락해줘" / "<이름> 거절해줘"로 바로 처리 가능)`);
+        }
+      }
+    } else if ((cmd === "수락" || cmd === "거절") && parts.length >= 2) {
+      if (!ctx.session) {
+        out.push(`아직 로그인 안 했어. ${LOGIN_HELP}`);
+      } else {
+        const explicitPid = parts.length >= 3 && getProject(parts[1]) ? parts[1] : null;
+        const name = explicitPid ? parts[2] : parts[1];
+        const ownedIds = await getOwnedProjectIds(ctx.session.name);
+
+        if (!ownedIds.length) {
+          out.push("PM으로 등록된 프로젝트가 없어서 처리할 수 없어.");
+        } else if (explicitPid && !ownedIds.includes(explicitPid)) {
+          out.push(`『${projectTitle(explicitPid)}』의 PM이 아니라서 처리할 수 없어.`);
+        } else {
+          const candidateIds = explicitPid ? [explicitPid] : ownedIds;
+          const matches: { pid: string; row: ApplicationRow }[] = [];
+          for (const cid of candidateIds) {
+            const rows = await readApps(cid);
+            const match = rows.find((r) => r.applicant === name && r.status === "pending");
+            if (match) matches.push({ pid: cid, row: match });
+          }
+
+          if (!matches.length) {
+            out.push(`대기중인 "${name}"의 신청을 못 찾았어.`);
+          } else if (matches.length > 1) {
+            out.push(
+              `"${name}"이(가) 여러 프로젝트에 대기중이야. 프로젝트를 지정해줘: ${matches
+                .map((m) => projectTitle(m.pid))
+                .join(", ")}`
+            );
+          } else {
+            const { pid: mpid, row } = matches[0];
+            const status = cmd === "수락" ? "accepted" : "rejected";
+            const { error } = await supabase.from("applications").update({ status }).eq("id", row.id);
+            if (error) throw new Error(error.message);
+            out.push(`『${projectTitle(mpid)}』 ${name} 신청 ${cmd === "수락" ? "수락" : "거절"} 처리 완료.`);
+          }
         }
       }
     } else {
