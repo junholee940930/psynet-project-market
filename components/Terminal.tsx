@@ -17,10 +17,8 @@ function loadSession(): Session | null {
   }
 }
 
-const INTRO: LogLine[] = [
-  { text: "PROJECT MARKET", cls: "banner" },
+const USAGE: LogLine[] = [
   { text: "프로젝트는 이름으로 찾고 부르면 됨. 대화하듯 입력하면 됨. 예시:", cls: "dim" },
-  { text: '  · "로그인 이준호 010-1234-5678 junho@psynet.co.kr" → 로그인(이메일 선택, 처음이면 자동 가입)', cls: "dim" },
   { text: '  · "AI/ML 관련 프로젝트 찾아줘"           → 매칭 조회', cls: "dim" },
   { text: '  · "다크모드 프로젝트 현황 어때?"          → 협의방 조회', cls: "dim" },
   { text: '  · "다크모드 프로젝트에 나 20% 지분 넣고싶어" → 지분 제안·참여 등록', cls: "dim" },
@@ -32,8 +30,23 @@ const INTRO: LogLine[] = [
   { text: "──────────────────────────────────────────", cls: "dim" },
 ];
 
+function greeting(session: Session | null): LogLine[] {
+  if (session) {
+    return [
+      { text: "PROJECT MARKET", cls: "banner" },
+      { text: `다시 왔네, ${session.name}님. 바로 검색하면 됨 — 예) "AI/ML 프로젝트 찾아줘"`, cls: "dim" },
+      ...USAGE,
+    ];
+  }
+  return [
+    { text: "PROJECT MARKET", cls: "banner" },
+    { text: "누구세요? 이름이랑 전화번호부터 알려줘 (예: 이준호 010-1234-5678, 이메일은 선택)", cls: "dim" },
+    ...USAGE,
+  ];
+}
+
 export default function Terminal() {
-  const [log, setLog] = useState<LogLine[]>(INTRO);
+  const [log, setLog] = useState<LogLine[]>([]);
   const [value, setValue] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [hIdx, setHIdx] = useState(0);
@@ -42,7 +55,9 @@ export default function Terminal() {
   const termRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setSession(loadSession());
+    const s = loadSession();
+    setSession(s);
+    setLog(greeting(s));
   }, []);
 
   useEffect(() => {

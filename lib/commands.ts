@@ -96,7 +96,9 @@ function nlToCommand(
   if (["로그아웃", "로그아웃할래", "나갈래", "계정 나가", "로그아웃해줘"].some((k) => text.includes(k))) {
     return { command: "로그아웃", lastProjectId };
   }
-  if (text.includes("로그인") || (extractPhone(text) && /이름|나는/.test(text))) {
+  // 로그인 안 된 상태에서 전화번호가 보이면 "로그인"이라는 말이 없어도 로그인 시도로 간주
+  // (터미널이 먼저 "누구세요?" 물어본 뒤라, 이름+번호만 답하는 게 자연스러움)
+  if (text.includes("로그인") || (extractPhone(text) && (/이름|나는/.test(text) || !session))) {
     const loginCmd = tryParseLogin(text);
     if (loginCmd) return { command: loginCmd, lastProjectId };
   }
