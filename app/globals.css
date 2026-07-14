@@ -59,6 +59,125 @@ a {
   font-size: 13px;
 }
 
+/* ---------- Landing (root, 애니메이션 데모) ---------- */
+
+.landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.landing .eyebrow {
+  color: #8c887e;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.landing-h1 {
+  font-size: clamp(24px, 4vw, 36px);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.landing-h1 b {
+  color: #3cff7a;
+}
+
+#demo-window {
+  width: 100%;
+  max-width: 720px;
+  background: #0a0a0a;
+  border: 1px solid #1a2a1e;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(60, 255, 122, 0.06);
+}
+
+#demo-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  background: #111;
+  border-bottom: 1px solid #1a2a1e;
+}
+
+#demo-titlebar .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+#demo-titlebar .dot.r {
+  background: #ff5f57;
+}
+#demo-titlebar .dot.y {
+  background: #febc2e;
+}
+#demo-titlebar .dot.g {
+  background: #28c840;
+}
+
+.demo-label {
+  margin-left: 8px;
+  font-size: 11px;
+  color: #5c8c6a;
+}
+
+#demo-term {
+  padding: 22px 24px;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  line-height: 1.7;
+  height: 320px;
+  overflow-y: hidden;
+  font-family: "SF Mono", "IBM Plex Mono", "Menlo", monospace;
+  font-size: 15px;
+  color: #3cff7a;
+}
+
+.demo-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background: #3cff7a;
+  vertical-align: middle;
+  animation: demo-blink 0.9s step-end infinite;
+}
+@keyframes demo-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.demo-u {
+  color: #fff;
+}
+.demo-o {
+  color: #5c8c6a;
+}
+
+#demo-start-btn {
+  font-family: inherit;
+  font-size: 13px;
+  color: #3cff7a;
+  background: transparent;
+  border: 1px solid #3cff7a;
+  padding: 12px 30px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  display: inline-block;
+}
+#demo-start-btn:hover {
+  background: rgba(60, 255, 122, 0.08);
+}
+
 /* ---------- Terminal ---------- */
 
 .term-wrap {

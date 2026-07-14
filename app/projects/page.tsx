@@ -41,9 +41,9 @@ export default function ProjectsPage() {
     <main className="cards-page">
       <h1>PROJECT MARKET — 전체 프로젝트</h1>
       <p className="sub">
-        {session ? `${session.name}님 · 보유 스킬: ${skills.join(", ") || "(미설정)"}` : '로그인 안 됨 — 홈 터미널에서 "로그인 <이름> <전화번호>"'}
+        {session ? `${session.name}님 · 보유 스킬: ${skills.join(", ") || "(미설정)"}` : '로그인 안 됨 — 터미널에서 "로그인 <이름> <전화번호>"'}
         {" · "}
-        <a href="/">← 터미널로</a>
+        <a href="/start">← 터미널로</a>
       </p>
       <p className="sub">
         {hasHistory ? `활동 이력 ${completed.length}건 → 등급 산출됨` : "활동 이력 없음 → 전 프로젝트 '신규' 표시 (등급 미산출)"}
