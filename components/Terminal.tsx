@@ -17,31 +17,16 @@ function loadSession(): Session | null {
   }
 }
 
-const USAGE: LogLine[] = [
-  { text: "프로젝트는 이름으로 찾고 부르면 됨. 대화하듯 입력하면 됨. 예시:", cls: "dim" },
-  { text: '  · "AI/ML 관련 프로젝트 찾아줘"           → 매칭 조회', cls: "dim" },
-  { text: '  · "다크모드 프로젝트 현황 어때?"          → 협의방 조회', cls: "dim" },
-  { text: '  · "다크모드 프로젝트에 나 20% 지분 넣고싶어" → 지분 제안·참여 등록', cls: "dim" },
-  { text: '  · "이개발 30%, 박기획 50% 추가"          → 이어서 여러 명 한번에 등록', cls: "dim" },
-  { text: '  · "다 됐어 확정하자"                    → 전원 합의 시 지분 확정 (합계 100% 필요)', cls: "dim" },
-  { text: '  · "내 스킬은 기획,마케팅,운영이야"        → 스킬 프로필 저장(로그인 필요)', cls: "dim" },
-  { text: '  · "프로젝트 총 몇개야?"                 → 등록 건수', cls: "dim" },
-  { text: "도움말 입력하면 사용법 다시 볼 수 있음", cls: "dim" },
-  { text: "──────────────────────────────────────────", cls: "dim" },
-];
-
 function greeting(session: Session | null): LogLine[] {
   if (session) {
     return [
       { text: "PROJECT MARKET", cls: "banner" },
       { text: `다시 왔네, ${session.name}님. 바로 검색하면 됨 — 예) "AI/ML 프로젝트 찾아줘"`, cls: "dim" },
-      ...USAGE,
     ];
   }
   return [
     { text: "PROJECT MARKET", cls: "banner" },
     { text: "누구세요? 이름이랑 전화번호부터 알려줘 (예: 이준호 010-1234-5678, 이메일은 선택)", cls: "dim" },
-    ...USAGE,
   ];
 }
 

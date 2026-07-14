@@ -1,4 +1,5 @@
 import Terminal from "@/components/Terminal";
+import { COMMAND_EXAMPLES } from "@/lib/examples";
 
 export default function HomePage() {
   return (
@@ -13,6 +14,17 @@ export default function HomePage() {
         </div>
       </section>
       <Terminal />
+      <section className="examples">
+        <div className="examples-title">이렇게 말하면 돼요</div>
+        <div className="examples-grid">
+          {COMMAND_EXAMPLES.map((e) => (
+            <div className="examples-item" key={e.cmd}>
+              <span className="examples-cmd">&quot;{e.cmd}&quot;</span>
+              <span className="examples-desc">{e.desc}</span>
+            </div>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }
