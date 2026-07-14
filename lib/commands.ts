@@ -12,7 +12,7 @@
 // 대시보드(비밀번호 보호)에서 전체 프로젝트 현황을 본다.
 
 import { supabase, type ApplicationRow } from "@/lib/supabase";
-import { getProject, gradeFor, listProjects, type Project } from "@/lib/projects";
+import { ALL_SKILLS, getProject, gradeFor, listProjects, type Project } from "@/lib/projects";
 import { extractEmail, extractPhone, findOrCreateUser, getUserByPhone, normalizePhone, type Session } from "@/lib/auth";
 import { getOwnedProjectIds } from "@/lib/pmMap";
 
@@ -29,7 +29,7 @@ export type CommandResult = {
 };
 
 const KNOWN_CMDS = new Set([
-  "도움말", "help", "프로필", "스킬", "매칭", "방", "신청", "개수", "로그인", "로그아웃",
+  "도움말", "help", "프로필", "스킬", "스킬추가", "스킬삭제", "매칭", "방", "신청", "개수", "로그인", "로그아웃",
   "내신청", "내프로젝트", "수락", "거절",
 ]);
 
@@ -156,10 +156,19 @@ function nlToCommand(
     return { command: `방 ${pid}`, lastProjectId: pid };
   }
 
+  // 스킬 추가/삭제는 전체 교체(스킬 <a,b,c>)보다 먼저 체크 — "마케팅 스킬 추가해줘"에도
+  // "스킬"이 들어있어서 순서가 바뀌면 교체 명령으로 잘못 갈 수 있음.
+  if (text.includes("스킬") && ["추가", "넣어", "넣고", "더해"].some((k) => text.includes(k))) {
+    const found = ALL_SKILLS.filter((s) => text.includes(s));
+    if (found.length) return { command: `스킬추가 ${found.join(",")}`, lastProjectId };
+  }
+  if (text.includes("스킬") && ["삭제", "빼줘", "빼고", "제거", "지워"].some((k) => text.includes(k))) {
+    const found = ALL_SKILLS.filter((s) => text.includes(s));
+    if (found.length) return { command: `스킬삭제 ${found.join(",")}`, lastProjectId };
+  }
+
   if (["스킬은", "스킬을", "스킬 바꿔", "스킬 설정", "내 스킬"].some((k) => text.includes(k))) {
-    const found = ["기획", "디자인", "프론트엔드", "백엔드", "데이터분석", "AI/ML", "마케팅", "운영", "영상편집", "번역"].filter(
-      (s) => text.includes(s)
-    );
+    const found = ALL_SKILLS.filter((s) => text.includes(s));
     if (found.length) return { command: `스킬 ${found.join(",")}`, lastProjectId };
   }
 
@@ -234,7 +243,7 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
 
   try {
     if (cmd === "도움말" || cmd === "help") {
-      out.push('사용법: 프로젝트명을 그대로 말하면 됨. 예) "다크모드 프로젝트 찾아줘" / "거기 신청할래" / "현황 어때?" / "내 신청 보여줘" / "내 프로젝트에 누가 신청했어?" / "<이름> 수락해줘"(PM 전용) / 스킬 <a,b,c> / 로그인 <이름> <전화번호>');
+      out.push('사용법: 프로젝트명을 그대로 말하면 됨. 예) "다크모드 프로젝트 찾아줘" / "거기 신청할래" / "현황 어때?" / "내 신청 보여줘" / "내 프로젝트에 누가 신청했어?" / "<이름> 수락해줘"(PM 전용) / "마케팅 스킬 추가해줘" / "기획 스킬 빼줘" / 스킬 <a,b,c>(전체 교체) / 로그인 <이름> <전화번호>');
     } else if (cmd === "로그인") {
       const name = parts[1];
       const phone = parts[2] ? normalizePhone(parts[2]) : null;
@@ -276,6 +285,33 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
           .eq("phone", ctx.session.phone);
         if (error) throw new Error(error.message);
         out.push(`스킬 저장됨: ${newSkills.join(", ")}`);
+      }
+    } else if ((cmd === "스킬추가" || cmd === "스킬삭제") && parts.length >= 2) {
+      if (!ctx.session) {
+        out.push(`스킬을 바꾸려면 먼저 로그인해야 해. ${LOGIN_HELP}`);
+      } else {
+        const requested = parts[1].split(",").map((s) => s.trim()).filter(Boolean);
+        const invalid = requested.filter((s) => !ALL_SKILLS.includes(s as (typeof ALL_SKILLS)[number]));
+        const valid = requested.filter((s) => ALL_SKILLS.includes(s as (typeof ALL_SKILLS)[number]));
+
+        if (!valid.length) {
+          out.push(`인식 못한 스킬이야: ${invalid.join(", ")}. 사용 가능: ${ALL_SKILLS.join(", ")}`);
+        } else {
+          const user = await getUserByPhone(ctx.session.phone);
+          const current = user?.skills ?? [];
+          const nextSkills =
+            cmd === "스킬추가"
+              ? Array.from(new Set([...current, ...valid]))
+              : current.filter((s) => !valid.includes(s));
+          const { error } = await supabase
+            .from("users")
+            .update({ skills: nextSkills })
+            .eq("phone", ctx.session.phone);
+          if (error) throw new Error(error.message);
+          out.push(`${cmd === "스킬추가" ? "추가됨" : "삭제됨"}: ${valid.join(", ")}`);
+          if (invalid.length) out.push(`(인식 못한 스킬 무시: ${invalid.join(", ")})`);
+          out.push(`현재 스킬: ${nextSkills.join(", ") || "(없음)"}`);
+        }
       }
     } else if (cmd === "개수") {
       out.push(`등록 프로젝트: 총 ${listProjects().length}건`);
