@@ -196,7 +196,7 @@ function roomLines(rows: NegotiationRow[], title: string): string[] {
   return out;
 }
 
-const LOGIN_HELP = '로그인하려면: "로그인 <이름> <전화번호>" 또는 "이름은 이준호, 번호는 010-1234-5678로 로그인해줘"처럼 말해봐.';
+const LOGIN_HELP = '로그인하려면: "로그인 <이름> <전화번호> [이메일]" (이메일은 선택) 또는 "이름은 이준호, 번호는 010-1234-5678, 이메일은 junho@psynet.co.kr로 로그인해줘"처럼 말해봐.';
 
 export async function processCommand(rawLine: string, ctx: CommandContext): Promise<CommandResult> {
   const line = rawLine.trim();
@@ -219,16 +219,17 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
 
   try {
     if (cmd === "도움말" || cmd === "help") {
-      out.push('사용법: 프로젝트명을 그대로 말하면 됨. 예) "다크모드 프로젝트 찾아줘" / "거기 20% 지분 넣고싶어" / "확정하자" / 스킬 <a,b,c> / 로그인 <이름> <전화번호>');
+      out.push('사용법: 프로젝트명을 그대로 말하면 됨. 예) "다크모드 프로젝트 찾아줘" / "거기 20% 지분 넣고싶어" / "확정하자" / 스킬 <a,b,c> / 로그인 <이름> <전화번호> [이메일]');
     } else if (cmd === "로그인") {
       const name = parts[1];
       const phone = parts[2] ? normalizePhone(parts[2]) : null;
-      const email = parts[3] ?? null;
+      const emailArg = parts[3] && /^[\w.+-]+@[\w-]+\.[\w.-]+$/.test(parts[3]) ? parts[3] : null;
       if (!name || !phone) {
         out.push(`[오류] 이름/전화번호를 못 읽었어. ${LOGIN_HELP}`);
       } else {
-        const user = await findOrCreateUser(name, phone, email);
+        const user = await findOrCreateUser(name, phone, emailArg);
         out.push(`${user.name}님, 로그인 완료. 이제 "AI/ML 프로젝트 찾아줘"처럼 바로 검색해봐.`);
+        if (user.email) out.push(`이메일: ${user.email}`);
         if (user.skills.length) out.push(`저장된 스킬: ${user.skills.join(", ")}`);
         return { output: out.join("\n"), lastProjectId, session: { name: user.name, phone: user.phone } };
       }
@@ -244,6 +245,7 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
           out.push(`아직 로그인 안 했어. ${LOGIN_HELP}`);
         } else {
           out.push(`이름: ${user.name}`);
+          out.push(`이메일: ${user.email || "(미설정)"}`);
           out.push(`스킬: ${user.skills.join(", ") || "(미설정)"}`);
           out.push(`완료 프로젝트: ${user.completed_projects.join(", ") || "없음"}`);
         }

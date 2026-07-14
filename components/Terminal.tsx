@@ -20,7 +20,7 @@ function loadSession(): Session | null {
 const INTRO: LogLine[] = [
   { text: "PROJECT MARKET", cls: "banner" },
   { text: "프로젝트는 이름으로 찾고 부르면 됨. 대화하듯 입력하면 됨. 예시:", cls: "dim" },
-  { text: '  · "로그인 이준호 010-1234-5678"          → 로그인(처음이면 자동 가입)', cls: "dim" },
+  { text: '  · "로그인 이준호 010-1234-5678 junho@psynet.co.kr" → 로그인(이메일 선택, 처음이면 자동 가입)', cls: "dim" },
   { text: '  · "AI/ML 관련 프로젝트 찾아줘"           → 매칭 조회', cls: "dim" },
   { text: '  · "다크모드 프로젝트 현황 어때?"          → 협의방 조회', cls: "dim" },
   { text: '  · "다크모드 프로젝트에 나 20% 지분 넣고싶어" → 지분 제안·참여 등록', cls: "dim" },
