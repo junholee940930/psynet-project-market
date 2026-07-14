@@ -31,3 +31,14 @@ export type NegotiationRow = {
   status: "proposed" | "confirmed";
   created_at: string;
 };
+
+export type UserRow = {
+  id: number;
+  phone: string;
+  name: string;
+  email: string | null;
+  skills: string[];
+  completed_projects: string[];
+  created_at: string;
+  last_login_at: string;
+};

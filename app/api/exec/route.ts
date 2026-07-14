@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processCommand } from "@/lib/commands";
+import type { Session } from "@/lib/auth";
 
 export const runtime = "nodejs";
+
+function parseSession(body: unknown): Session | null {
+  if (
+    body &&
+    typeof body === "object" &&
+    "session" in body &&
+    body.session &&
+    typeof (body.session as Session).name === "string" &&
+    typeof (body.session as Session).phone === "string"
+  ) {
+    const s = body.session as Session;
+    return { name: s.name, phone: s.phone };
+  }
+  return null;
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -10,8 +26,7 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await processCommand(body.cmd, {
-    skills: Array.isArray(body.skills) ? body.skills : [],
-    completed: Array.isArray(body.completed) ? body.completed : [],
+    session: parseSession(body),
     lastProjectId: typeof body.lastProjectId === "string" ? body.lastProjectId : null,
   });
 

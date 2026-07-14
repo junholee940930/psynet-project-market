@@ -3,25 +3,35 @@
 import { useEffect, useState } from "react";
 import { GRADE_COLOR, gradeFor, listProjects } from "@/lib/projects";
 
-const SKILLS_KEY = "pm_skills";
-const COMPLETED_KEY = "pm_completed";
+const SESSION_KEY = "pm_session";
 
-function loadList(key: string): string[] {
+type Session = { name: string; phone: string };
+
+function loadSession(): Session | null {
   try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as string[]) : [];
+    const raw = window.localStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as Session) : null;
   } catch {
-    return [];
+    return null;
   }
 }
 
 export default function ProjectsPage() {
+  const [session, setSession] = useState<Session | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [completed, setCompleted] = useState<string[]>([]);
 
   useEffect(() => {
-    setSkills(loadList(SKILLS_KEY));
-    setCompleted(loadList(COMPLETED_KEY));
+    const s = loadSession();
+    setSession(s);
+    if (!s) return;
+    fetch(`/api/profile?phone=${encodeURIComponent(s.phone)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setSkills(Array.isArray(d.skills) ? d.skills : []);
+        setCompleted(Array.isArray(d.completed) ? d.completed : []);
+      })
+      .catch(() => {});
   }, []);
 
   const hasHistory = completed.length > 0;
@@ -31,7 +41,8 @@ export default function ProjectsPage() {
     <main className="cards-page">
       <h1>PROJECT MARKET — 전체 프로젝트</h1>
       <p className="sub">
-        보유 스킬: {skills.join(", ") || "(미설정 — 홈 터미널에서 \"내 스킬은 ...\"으로 설정)"} ·{" "}
+        {session ? `${session.name}님 · 보유 스킬: ${skills.join(", ") || "(미설정)"}` : '로그인 안 됨 — 홈 터미널에서 "로그인 <이름> <전화번호>"'}
+        {" · "}
         <a href="/">← 터미널로</a>
       </p>
       <p className="sub">

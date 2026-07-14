@@ -3,23 +3,28 @@
 // 여러 방문자의 요청을 재사용해서 처리할 수 있어, 전역 변수를 쓰면 사용자 A의 "직전 프로젝트"
 // 문맥이 사용자 B의 요청에 새어들어갈 수 있다. 대신 클라이언트가 lastProjectId를 들고 있다가
 // 매 요청마다 넘기고, 응답으로 갱신된 값을 돌려받아 다음 요청에 다시 실어보낸다.
+// 로그인도 같은 이유로 서버 세션이 아니라 클라이언트가 들고 있는 {name, phone}을 매 요청마다
+// 실어보내는 방식이다 — 비밀번호 없는 자가등록형이라 phone이 곧 계정 식별자.
 
 import { supabase, type NegotiationRow } from "@/lib/supabase";
 import { getProject, gradeFor, listProjects, type Project } from "@/lib/projects";
+import { extractEmail, extractPhone, findOrCreateUser, getUserByPhone, normalizePhone, type Session } from "@/lib/auth";
 
 export type CommandContext = {
-  skills: string[];
-  completed: string[];
+  session: Session | null;
   lastProjectId: string | null;
 };
 
 export type CommandResult = {
   output: string;
   lastProjectId: string | null;
-  newSkills?: string[];
+  /** undefined = 세션 변화 없음, null = 로그아웃, Session = 로그인/갱신 */
+  session?: Session | null;
 };
 
-const KNOWN_CMDS = new Set(["도움말", "help", "프로필", "스킬", "매칭", "방", "참여", "다중참여", "확정", "개수"]);
+const KNOWN_CMDS = new Set([
+  "도움말", "help", "프로필", "스킬", "매칭", "방", "참여", "다중참여", "확정", "개수", "로그인", "로그아웃",
+]);
 
 function resolveProjectIdScored(text: string): { id: string | null; score: number } {
   let bestId: string | null = null;
@@ -55,12 +60,47 @@ function projectTitle(pid: string): string {
   return getProject(pid)?.title ?? pid;
 }
 
+/** "로그인 이준호 01012345678 junho@x.com" 형태로 정규화. 이름/전화 못 찾으면 null. */
+function tryParseLogin(text: string): string | null {
+  const phone = extractPhone(text);
+  if (!phone) return null;
+  const email = extractEmail(text);
+
+  let nameMatch = text.match(/(?:이름은|이름|나는)\s*([가-힣A-Za-z0-9]{2,10})/);
+  let name = nameMatch ? nameMatch[1] : null;
+
+  if (!name) {
+    // "로그인" "전화번호" "이메일" 등 잡토큰과 전화/이메일 문자열을 지우고 남는 순수 한글 토큰을 이름으로 추정
+    let remain = text;
+    if (email) remain = remain.replace(email, " ");
+    remain = remain.replace(/01[0-9][-\s]?\d{3,4}[-\s]?\d{4}/, " ");
+    for (const s of ["로그인", "할래", "할게", "해줘", "번호는", "번호", "전화번호는", "전화번호", "전화", "이야", "이고", "이고요", "이에요", "예요", "야"]) {
+      remain = remain.split(s).join(" ");
+    }
+    const tok = remain.trim().split(/\s+/).find((t) => /^[가-힣]{2,5}$/.test(t));
+    name = tok ?? null;
+  }
+
+  if (!name) return null;
+  return email ? `로그인 ${name} ${phone} ${email}` : `로그인 ${name} ${phone}`;
+}
+
 /** 자연어 → 명령 문자열 변환. 매칭 실패 시 null. lastProjectId 갱신값도 함께 반환. */
 function nlToCommand(
   line: string,
-  lastProjectId: string | null
+  lastProjectId: string | null,
+  session: Session | null
 ): { command: string | null; lastProjectId: string | null } {
   const text = line.trim();
+
+  if (["로그아웃", "로그아웃할래", "나갈래", "계정 나가", "로그아웃해줘"].some((k) => text.includes(k))) {
+    return { command: "로그아웃", lastProjectId };
+  }
+  if (text.includes("로그인") || (extractPhone(text) && /이름|나는/.test(text))) {
+    const loginCmd = tryParseLogin(text);
+    if (loginCmd) return { command: loginCmd, lastProjectId };
+  }
+
   const pidMatch = text.match(/(prj-\d{4}-\d-\d{3})/i);
   const pid = pidMatch ? pidMatch[1].toLowerCase() : null;
 
@@ -97,7 +137,7 @@ function nlToCommand(
     const target = pickTarget(text, pid, lastProjectId);
     if (target) {
       const nameMatch = text.match(/(?:내\s*이름은|나는)\s*([가-힣A-Za-z0-9]+)/);
-      const name = nameMatch ? nameMatch[1] : "나";
+      const name = nameMatch ? nameMatch[1] : session?.name ?? "나";
       return { command: `참여 ${target} ${name} 참여자 ${pct}`, lastProjectId: target };
     }
   }
@@ -156,6 +196,8 @@ function roomLines(rows: NegotiationRow[], title: string): string[] {
   return out;
 }
 
+const LOGIN_HELP = '로그인하려면: "로그인 <이름> <전화번호>" 또는 "이름은 이준호, 번호는 010-1234-5678로 로그인해줘"처럼 말해봐.';
+
 export async function processCommand(rawLine: string, ctx: CommandContext): Promise<CommandResult> {
   const line = rawLine.trim();
   if (!line) return { output: "", lastProjectId: ctx.lastProjectId };
@@ -165,7 +207,7 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
   let lastProjectId = ctx.lastProjectId;
 
   if (!KNOWN_CMDS.has(cmd)) {
-    const converted = nlToCommand(line, ctx.lastProjectId);
+    const converted = nlToCommand(line, ctx.lastProjectId, ctx.session);
     lastProjectId = converted.lastProjectId;
     if (converted.command) {
       parts = converted.command.split(/\s+/);
@@ -177,26 +219,62 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
 
   try {
     if (cmd === "도움말" || cmd === "help") {
-      out.push('사용법: 프로젝트명을 그대로 말하면 됨. 예) "다크모드 프로젝트 찾아줘" / "거기 20% 지분 넣고싶어" / "확정하자" / 스킬 <a,b,c>');
+      out.push('사용법: 프로젝트명을 그대로 말하면 됨. 예) "다크모드 프로젝트 찾아줘" / "거기 20% 지분 넣고싶어" / "확정하자" / 스킬 <a,b,c> / 로그인 <이름> <전화번호>');
+    } else if (cmd === "로그인") {
+      const name = parts[1];
+      const phone = parts[2] ? normalizePhone(parts[2]) : null;
+      const email = parts[3] ?? null;
+      if (!name || !phone) {
+        out.push(`[오류] 이름/전화번호를 못 읽었어. ${LOGIN_HELP}`);
+      } else {
+        const user = await findOrCreateUser(name, phone, email);
+        out.push(`${user.name}님, 로그인 완료. 이제 "AI/ML 프로젝트 찾아줘"처럼 바로 검색해봐.`);
+        if (user.skills.length) out.push(`저장된 스킬: ${user.skills.join(", ")}`);
+        return { output: out.join("\n"), lastProjectId, session: { name: user.name, phone: user.phone } };
+      }
+    } else if (cmd === "로그아웃") {
+      out.push("로그아웃 됐어.");
+      return { output: out.join("\n"), lastProjectId, session: null };
     } else if (cmd === "프로필") {
-      out.push(`스킬: ${ctx.skills.join(", ") || "(미설정)"}`);
-      out.push(`완료 프로젝트: ${ctx.completed.join(", ") || "없음"}`);
+      if (!ctx.session) {
+        out.push(`아직 로그인 안 했어. ${LOGIN_HELP}`);
+      } else {
+        const user = await getUserByPhone(ctx.session.phone);
+        if (!user) {
+          out.push(`아직 로그인 안 했어. ${LOGIN_HELP}`);
+        } else {
+          out.push(`이름: ${user.name}`);
+          out.push(`스킬: ${user.skills.join(", ") || "(미설정)"}`);
+          out.push(`완료 프로젝트: ${user.completed_projects.join(", ") || "없음"}`);
+        }
+      }
     } else if (cmd === "스킬" && parts.length >= 2) {
-      const newSkills = parts[1].split(",").map((s) => s.trim()).filter(Boolean);
-      out.push(`스킬 저장됨: ${newSkills.join(", ")}`);
-      return { output: out.join("\n"), lastProjectId, newSkills };
+      if (!ctx.session) {
+        out.push(`스킬을 저장하려면 먼저 로그인해야 해. ${LOGIN_HELP}`);
+      } else {
+        const newSkills = parts[1].split(",").map((s) => s.trim()).filter(Boolean);
+        const { error } = await supabase
+          .from("users")
+          .update({ skills: newSkills })
+          .eq("phone", ctx.session.phone);
+        if (error) throw new Error(error.message);
+        out.push(`스킬 저장됨: ${newSkills.join(", ")}`);
+      }
     } else if (cmd === "개수") {
       out.push(`등록 프로젝트: 총 ${listProjects().length}건`);
     } else if (cmd === "매칭") {
       const keywordTokens = parts.slice(1);
-      const hasHistory = ctx.completed.length > 0;
+      const user = ctx.session ? await getUserByPhone(ctx.session.phone) : null;
+      const skills = user?.skills ?? [];
+      const hasHistory = (user?.completed_projects.length ?? 0) > 0;
       const results = listProjects()
         .filter((p) => keywordTokens.every((t) => p.title.includes(t)))
         .map((p) => {
-          const overlap = p.required_skills.filter((s) => ctx.skills.includes(s));
-          const label = hasHistory ? gradeFor(ctx.skills, p.required_skills) : "신규";
+          const overlap = p.required_skills.filter((s) => skills.includes(s));
+          const label = hasHistory ? gradeFor(skills, p.required_skills) : "신규";
           return { p, label, overlap };
         });
+      if (!ctx.session) out.push(`(로그인하면 내 스킬 기준으로 등급이 매겨져. ${LOGIN_HELP})`);
       out.push(`매칭 결과 ${results.length}건:`);
       for (const { p, label, overlap } of results.slice(0, 15)) {
         out.push(`  [${label}] ${p.title}`);
