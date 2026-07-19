@@ -1,4 +1,4 @@
-import { supabase, type ApplicationRow } from "@/lib/supabase";
+import { supabase, type ApplicationRow, type UserRow } from "@/lib/supabase";
 import { listProjects, type Project } from "@/lib/projects";
 
 export type ProjectApplications = {
@@ -35,4 +35,13 @@ export async function getAdminApplications(): Promise<ProjectApplications[]> {
   });
 
   return result;
+}
+
+export async function getAllUsers(): Promise<UserRow[]> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .order("last_login_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as UserRow[];
 }

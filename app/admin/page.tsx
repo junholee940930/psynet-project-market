@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, adminPasswordConfigured, isValidAdminToken } from "@/lib/adminAuth";
-import { getAdminApplications } from "@/lib/admin";
+import { getAdminApplications, getAllUsers } from "@/lib/admin";
 import AdminLogin from "@/components/AdminLogin";
 import AdminLogout from "@/components/AdminLogout";
 import AdminApplicationActions from "@/components/AdminApplicationActions";
@@ -30,7 +30,7 @@ export default async function AdminPage() {
     return <AdminLogin />;
   }
 
-  const projectApps = await getAdminApplications();
+  const [projectApps, users] = await Promise.all([getAdminApplications(), getAllUsers()]);
   const pendingTotal = projectApps.reduce(
     (s, p) => s + p.applications.filter((a) => a.status === "pending").length,
     0
@@ -43,7 +43,55 @@ export default async function AdminPage() {
         <AdminLogout />
       </div>
       <a href="/">← 홈으로</a>
-      <p className="sub" style={{ marginTop: 16 }}>
+
+      <h2 style={{ marginTop: 28, marginBottom: 8 }}>전체 사용자 ({users.length}명)</h2>
+      {users.length === 0 ? (
+        <p className="sub">아직 가입한 사용자 없음.</p>
+      ) : (
+        <div className="card" style={{ display: "block", overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                {["이름", "전화번호", "이메일", "스킬", "가입일", "최근 로그인"].map((h) => (
+                  <th
+                    key={h}
+                    style={{
+                      textAlign: "left",
+                      padding: "6px 8px",
+                      fontSize: 12,
+                      color: "#8c887e",
+                      borderBottom: "1px solid #2a2a26",
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td style={{ padding: "6px 8px 6px 0", fontSize: 13 }}>{u.name}</td>
+                  <td style={{ padding: "6px 8px", fontSize: 13 }}>{u.phone}</td>
+                  <td style={{ padding: "6px 8px", fontSize: 13 }}>{u.email ?? "-"}</td>
+                  <td style={{ padding: "6px 8px", fontSize: 13 }}>
+                    {u.skills.length ? u.skills.join(", ") : "-"}
+                  </td>
+                  <td style={{ padding: "6px 8px", fontSize: 12, color: "#8c887e" }}>
+                    {new Date(u.created_at).toLocaleDateString("ko-KR")}
+                  </td>
+                  <td style={{ padding: "6px 8px", fontSize: 12, color: "#8c887e" }}>
+                    {new Date(u.last_login_at).toLocaleDateString("ko-KR")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h2 style={{ marginTop: 28, marginBottom: 8 }}>프로젝트 신청 현황</h2>
+      <p className="sub" style={{ marginTop: 0 }}>
         신청 있는 프로젝트 {projectApps.length}건 · 대기중인 신청 {pendingTotal}건
       </p>
 
