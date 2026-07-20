@@ -7,8 +7,8 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "개발",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-002",
@@ -19,8 +19,8 @@
       "디자인",
       "프론트엔드"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "개발",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-003",
@@ -30,8 +30,8 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "상용",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-005",
@@ -43,7 +43,7 @@
       "디자인",
       "운영"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "운영 리스크 최소화한 1단계 MVP 구조의 유저 → 캐스터 선물 프로젝트"
   },
   {
@@ -56,7 +56,7 @@
       "디자인",
       "운영"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "응원글이미지를 단발성 소비가 아닌 재노출 가능한 콘텐츠 자산으로 구조 개선"
   },
   {
@@ -69,7 +69,7 @@
       "디자인",
       "백엔드"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "시즌1 \"응원글에 전세계 짤 연동\" 고도화 프로젝트"
   },
   {
@@ -80,7 +80,7 @@
     "required_skills": [
       "백엔드"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "멈추지않는 서비스의 심장."
   },
   {
@@ -91,7 +91,7 @@
     "required_skills": [
       "운영"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "외부접속은 편리하게, 권한관리는 안전하게."
   },
   {
@@ -103,8 +103,8 @@
       "디자인",
       "번역"
     ],
-    "status": "negotiating",
-    "summary": "인원: iOS, Andorid 개발자, QA분 한분 모십니다."
+    "status": "개발",
+    "summary": "인원: iOS, Andorid 개발자, QA분 한분 모십니다. "
   },
   {
     "id": "prj-2026-2-011",
@@ -114,7 +114,7 @@
     "required_skills": [
       "AI/ML"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "data 3.0 정보제공 에이전트"
   },
   {
@@ -125,8 +125,8 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "개발",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-013",
@@ -136,8 +136,8 @@
     "required_skills": [
       "AI/ML"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "개발",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-014",
@@ -147,8 +147,8 @@
     "required_skills": [
       "운영"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "상용",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-015",
@@ -158,7 +158,7 @@
     "required_skills": [
       "데이터분석"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "그래픽 계산과 데이터 맵핑이 필요한  비주얼 콘텐츠 위젯을"
   },
   {
@@ -171,19 +171,19 @@
       "데이터분석",
       "디자인"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "1. UI 변경"
   },
   {
     "id": "prj-2026-2-017",
-    "title": "배당 광고 개선",
+    "title": "배당 페이지 광고 체질 개선",
     "pm": "이**",
     "max_participants": 10,
     "required_skills": [
       "마케팅"
     ],
-    "status": "in_progress",
-    "summary": "1. 푸시 랜딩페이지 구현"
+    "status": "상용",
+    "summary": "배너 광고 개선"
   },
   {
     "id": "prj-2026-2-018",
@@ -193,7 +193,7 @@
     "required_skills": [
       "데이터분석"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "축구 선수 스탯 확장 프로젝트입니다. 라인업 페이지에 기재돼 있는 선수 스탯을 공격, 패수, 수비로 세분화하여 약 20여개의 데이터를 확장할 예정입니다."
   },
   {
@@ -204,7 +204,7 @@
     "required_skills": [
       "데이터분석"
     ],
-    "status": "negotiating",
+    "status": "예정",
     "summary": "애플 구독 통계 연동 및 구독 통합 관리 & 어드민 통계 개편"
   },
   {
@@ -215,7 +215,7 @@
     "required_skills": [
       "데이터분석"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "[새롭게 태어나는 스텔러]"
   },
   {
@@ -228,7 +228,7 @@
       "데이터분석",
       "프론트엔드"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "라이브스코어 앱 사용자의 화면 진입 및 인앱 이벤트를 수집·저장하고, 관리자 대시보드와 AI 자연어 질의 기능을 통해 분석할 수 있는 사용자 행동 분석 플랫폼입니다. 어떤 경기·화면이 인기 있는지, 사용자가 어떤 동선으로 앱을 이용하는지를 정량적으로 파악하여 서비스 개선 의사결정에 활용합니다."
   },
   {
@@ -241,8 +241,8 @@
       "기획",
       "운영"
     ],
-    "status": "negotiating",
-    "summary": "1. 기존 분석글 구매 재화인 포인트를 SPCO로 전환합니다."
+    "status": "개발",
+    "summary": "1. 기존 분석글 구매 재화인 포인트를 SPCO로 전환합니다.\r"
   },
   {
     "id": "prj-2026-2-023",
@@ -253,19 +253,19 @@
       "디자인",
       "프론트엔드"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "*1~2번 항목 개발대기중"
   },
   {
     "id": "prj-2026-2-024",
-    "title": "프로토계산기\" 필터&알림 에이전트화",
+    "title": "\"프로토계산기\" 필터&알림 에이전트화",
     "pm": "정**",
     "max_participants": 10,
     "required_skills": [
       "AI/ML",
       "기획"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "[개발대기중]"
   },
   {
@@ -276,20 +276,20 @@
     "required_skills": [
       "기획"
     ],
-    "status": "in_progress",
-    "summary": "[픽]에 전반상품을 추가합니다."
+    "status": "상용",
+    "summary": "[픽]에 전반상품을 추가합니다.\r"
   },
   {
     "id": "prj-2026-2-026",
-    "title": "[픽] 유지보수를 통한 수익화",
+    "title": "추천 [픽] - 반대픽",
     "pm": "정**",
     "max_participants": 10,
     "required_skills": [
       "데이터분석",
       "기획"
     ],
-    "status": "negotiating",
-    "summary": "[개발대기중]"
+    "status": "개발",
+    "summary": "[AOS 개발자 모집중] / [개발대기중]"
   },
   {
     "id": "prj-2026-2-027",
@@ -299,7 +299,7 @@
     "required_skills": [
       "운영"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "1. 글로벌 역량강화 사업"
   },
   {
@@ -310,8 +310,8 @@
     "required_skills": [
       "프론트엔드"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "개발",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-032",
@@ -321,8 +321,8 @@
     "required_skills": [
       "기획"
     ],
-    "status": "in_progress",
-    "summary": "(설명 없음)"
+    "status": "상용",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-033",
@@ -332,30 +332,19 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "예정",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-035",
-    "title": "위젯 추가+변경",
+    "title": "그래픽코드 추가+변경",
     "pm": "신**",
     "max_participants": 10,
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "스텟스코어 그래픽코드로 종목 추가 및 변경"
-  },
-  {
-    "id": "prj-2026-2-036",
-    "title": "종료경기 유지",
-    "pm": "신**",
-    "max_participants": 10,
-    "required_skills": [
-      "기획"
-    ],
-    "status": "negotiating",
-    "summary": "종료된 경기가 일정 시간 해당 위치에서 유지된 후 하단으로 이동"
   },
   {
     "id": "prj-2026-2-037",
@@ -366,8 +355,8 @@
       "AI/ML",
       "운영"
     ],
-    "status": "in_progress",
-    "summary": "(설명 없음)"
+    "status": "상용",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-039",
@@ -377,18 +366,18 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "구영탄 전반&조합(축구 농구)&토토픽 개발"
   },
   {
     "id": "prj-2026-2-040",
-    "title": "Re:Compose",
+    "title": "라스를 선언형 UI로 다시만들기",
     "pm": "강**",
     "max_participants": 10,
     "required_skills": [
       "AI/ML"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "AI를 활용하여 라스를 Compose로 재탄생하는 프로젝트"
   },
   {
@@ -401,7 +390,7 @@
       "백엔드",
       "번역"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "API 비용 절감 , AI모델 관리를 위해 로컬LLM으로 전환"
   },
   {
@@ -412,8 +401,8 @@
     "required_skills": [
       "AI/ML"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "기획",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-044",
@@ -423,7 +412,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "신규 핸드볼 종목 추가 및 리그 연동"
   },
   {
@@ -434,7 +423,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "예정",
     "summary": "iOS 라이브스코어 및 하이데어 유지보수"
   },
   {
@@ -445,7 +434,7 @@
     "required_skills": [
       "백엔드"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "현재 고객 포인트 관련 변경내역(취소, 환불 등)이 발생하여도 내역을 전혀 알 수 없는 상태."
   },
   {
@@ -456,7 +445,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "프로토 승부식 더블찬스 + 첫 득점 팀 맞히기 유형 추가"
   },
   {
@@ -467,7 +456,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "예정",
     "summary": "중계 서비스"
   },
   {
@@ -478,7 +467,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "예정",
     "summary": "유저 중계 1단계"
   },
   {
@@ -489,7 +478,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "예정",
     "summary": "F1 등 레이싱 종목에 대한 유형 추가"
   },
   {
@@ -500,7 +489,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "게시물(알바 투표, 베팅 이슈, 카드뉴스 등) 다양화 및 릴스 고도화"
   },
   {
@@ -511,7 +500,7 @@
     "required_skills": [
       "운영"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "스레드 런칭 및 운영"
   },
   {
@@ -522,7 +511,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "신규 유저 및 베팅 용어, 은어를 잘 모르는 유저들을 위한 해석 봇! 라스를 더 쉽게!"
   },
   {
@@ -533,7 +522,7 @@
     "required_skills": [
       "마케팅"
     ],
-    "status": "negotiating",
+    "status": "예정",
     "summary": "신규 광고 파트너추가-몰로코 SDK 연동"
   },
   {
@@ -544,7 +533,7 @@
     "required_skills": [
       "프론트엔드"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "손 쉬운 응원 참여로 경기상세 화면 PV+1만건!"
   },
   {
@@ -555,7 +544,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "상용",
     "summary": "비시즌 기간 진행되는 리그를 유저 니즈 파악해 집중 추가"
   },
   {
@@ -566,7 +555,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "축구 포어벳 / 비티벳 / 윈드로윈 / 프리딕츠 스코어 예측 사이트 크롤링 서비스"
   },
   {
@@ -577,7 +566,7 @@
     "required_skills": [
       "운영"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "업데이트 담당, CS관리, 장애대응, QA, 방통위, 국내외 문자점검"
   },
   {
@@ -588,18 +577,18 @@
     "required_skills": [
       "AI/ML"
     ],
-    "status": "negotiating",
+    "status": "예정",
     "summary": "-매출시트 자동화"
   },
   {
     "id": "prj-2026-2-062",
-    "title": "시즌1 프로젝트 VM서버 이관",
+    "title": "프로젝트 유지보수",
     "pm": "이**",
     "max_participants": 10,
     "required_skills": [
       "백엔드"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "파편화 되어있는 시즌1 프로젝트 VM서버로 이관"
   },
   {
@@ -611,7 +600,7 @@
       "백엔드",
       "운영"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "리뷰 / 평점 수집 및 자동답변 모니터링 VM서버 이관"
   },
   {
@@ -622,7 +611,7 @@
     "required_skills": [
       "백엔드"
     ],
-    "status": "negotiating",
+    "status": "예정",
     "summary": "검수시트 라스슬렉 VM서버 이관"
   },
   {
@@ -633,7 +622,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "치어리더 페이지 추가"
   },
   {
@@ -644,7 +633,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "유튜브 하이라이트 자동 등록 시스템 구축"
   },
   {
@@ -655,7 +644,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "1차 : KBO 스탯 시각화"
   },
   {
@@ -666,7 +655,7 @@
     "required_skills": [
       "AI/ML"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "LIVE스코어 최초 Ai 모델 탑재"
   },
   {
@@ -677,7 +666,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "스코어 내기"
   },
   {
@@ -688,7 +677,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "스포츠토토공단 NFC 제안"
   },
   {
@@ -701,7 +690,7 @@
       "데이터분석",
       "기획"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "\"이벤트값 쫓는 것은 그만! AI가 자동 맥락으로 기억한다!\""
   },
   {
@@ -712,8 +701,8 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
-    "summary": "\"놀고 먹으며 일하자.\""
+    "status": "상용",
+    "summary": "\"놀고 먹으며 일하자.\"\r"
   },
   {
     "id": "prj-2026-2-076",
@@ -723,7 +712,7 @@
     "required_skills": [
       "마케팅"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "문제 광고 CS ( 메일, 리뷰 ) 등 접수 후 즉시 해결 / n8n 활용"
   },
   {
@@ -734,8 +723,8 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "상용",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-078",
@@ -745,7 +734,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "영수증 공유 / 탑승"
   },
   {
@@ -758,7 +747,7 @@
       "디자인",
       "프론트엔드"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "개발 시즌"
   },
   {
@@ -769,8 +758,8 @@
     "required_skills": [
       "마케팅"
     ],
-    "status": "in_progress",
-    "summary": "(설명 없음)"
+    "status": "상용",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-081",
@@ -782,12 +771,12 @@
       "디자인",
       "운영"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "쉽고 빠른 유저간 티키타카 좋아요 최신화 버전 기획 및 탑재"
   },
   {
     "id": "prj-2026-2-082",
-    "title": "HOT 쫄깃한 투데이 분위기",
+    "title": "쫄깃한 오늘의 경기",
     "pm": "박**",
     "max_participants": 10,
     "required_skills": [
@@ -795,7 +784,7 @@
       "기획",
       "디자인"
     ],
-    "status": "negotiating",
+    "status": "개발",
     "summary": "AI 도장깨기 - #1 LIVE 화면 뽀개기"
   },
   {
@@ -806,7 +795,7 @@
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "예정",
     "summary": "배당률 등락 애니메이션"
   },
   {
@@ -817,8 +806,8 @@
     "required_skills": [
       "데이터분석"
     ],
-    "status": "negotiating",
-    "summary": "“시장 흐름과 돈의 방향”을 보여주는 실시간 데이터 콘텐츠 구현"
+    "status": "기획",
+    "summary": "“시장 흐름과 돈의 방향”을 보여주는 실시간 데이터 콘텐츠 구현\r"
   },
   {
     "id": "prj-2026-2-086",
@@ -829,7 +818,7 @@
       "프론트엔드",
       "마케팅"
     ],
-    "status": "negotiating",
+    "status": "기획",
     "summary": "경기 라이브 화면에 이벤트 바로가기 버튼 추가"
   },
   {
@@ -840,7 +829,7 @@
     "required_skills": [
       "데이터분석"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "자체 개발한 칼시 자동 매칭, 데이터 입력 프로세스를 사내 데몬으로 재구성"
   },
   {
@@ -853,8 +842,8 @@
       "기획",
       "백엔드"
     ],
-    "status": "negotiating",
-    "summary": "목적: 라이브 스코어 베팅 스킬 향상, 과거 데이터 활용,  UV 30% 증대"
+    "status": "예정",
+    "summary": "목적: 라이브 스코어 베팅 스킬 향상, 과거 데이터 활용,  UV 30% 증대 "
   },
   {
     "id": "prj-2026-2-091",
@@ -864,18 +853,18 @@
     "required_skills": [
       "AI/ML"
     ],
-    "status": "negotiating",
+    "status": "예정",
     "summary": "순위표 / 리그 자동화"
   },
   {
     "id": "prj-2026-2-092",
-    "title": "올..킬....",
+    "title": "올킬 이벤트",
     "pm": "최**",
     "max_participants": 10,
     "required_skills": [
       "기획"
     ],
-    "status": "negotiating",
+    "status": "상용",
     "summary": "올킬"
   },
   {
@@ -886,8 +875,8 @@
     "required_skills": [
       "디자인"
     ],
-    "status": "negotiating",
-    "summary": "(설명 없음)"
+    "status": "기획",
+    "summary": ""
   },
   {
     "id": "prj-2026-2-095",
@@ -898,7 +887,99 @@
       "AI/ML",
       "마케팅"
     ],
-    "status": "in_progress",
+    "status": "상용",
     "summary": "응원글 광고체크 로컬LLM구축"
+  },
+  {
+    "id": "prj-2026-2-097",
+    "title": "(AOS랩) 정제(DOM을 XML로, XML을 JSON으로)",
+    "pm": "신**",
+    "max_participants": 4,
+    "required_skills": [
+      "백엔드"
+    ],
+    "status": "개발",
+    "summary": "네트워크 통신 중 XML의 과도한 패킷양 감소를 위한 JSON전환\r"
+  },
+  {
+    "id": "prj-2026-2-099",
+    "title": "LIVE스코어+투자 WEB/APP",
+    "pm": "정**",
+    "max_participants": 3,
+    "required_skills": [
+      "기획"
+    ],
+    "status": "기획",
+    "summary": "LIVE스코어 WEB과"
+  },
+  {
+    "id": "prj-2026-2-100",
+    "title": "앱 현지화 및 표준화(글로벌)",
+    "pm": "임**",
+    "max_participants": 5,
+    "required_skills": [
+      "번역",
+      "기획"
+    ],
+    "status": "기획",
+    "summary": "본격적인 글로벌 마케팅 및 진출에 앞서, 앱의 기술적·운영적 준비도(Readiness)를 완벽한 수준으로 끌어올리기 위한 코드 리팩토링, 번역 관리 체계 구축 및 글로벌 정책 수립 프로젝트입니다."
+  },
+  {
+    "id": "prj-2026-2-101",
+    "title": "인앱결제 실시간 정합성 관리 시스템 구축",
+    "pm": "이**",
+    "max_participants": 2,
+    "required_skills": [
+      "백엔드"
+    ],
+    "status": "개발",
+    "summary": "인앱결제 정합성 관리 시스템"
+  },
+  {
+    "id": "prj-2026-2-103",
+    "title": "베팅 키포인트 (a.k.a 도장깨기)",
+    "pm": "박**",
+    "max_participants": 1,
+    "required_skills": [
+      "데이터분석",
+      "기획"
+    ],
+    "status": "예정",
+    "summary": "당선작 4건 베리에이션 예정 : 키포인트 + 핵심지표 + 그래프"
+  },
+  {
+    "id": "prj-2026-2-104",
+    "title": "월드컵 이벤트 기획",
+    "pm": "이**",
+    "max_participants": 3,
+    "required_skills": [
+      "기획",
+      "마케팅"
+    ],
+    "status": "보류",
+    "summary": "월드컵 이벤트 기획 준비"
+  },
+  {
+    "id": "prj-2026-2-105",
+    "title": "고객과 상호작용하는 AI 서비스 SOC",
+    "pm": "박**",
+    "max_participants": 1,
+    "required_skills": [
+      "AI/ML",
+      "백엔드"
+    ],
+    "status": "예정",
+    "summary": "내재화 된 SLM(gemma 4) 기반 AI 서비스 구축"
+  },
+  {
+    "id": "prj-2026-2-106",
+    "title": "워치앱 제작",
+    "pm": "이**",
+    "max_participants": 1,
+    "required_skills": [
+      "프론트엔드"
+    ],
+    "status": "예정",
+    "summary": "워치앱을 제작하는 프로젝트"
   }
 ]
