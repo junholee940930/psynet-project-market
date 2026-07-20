@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PROJECT MARKET — PSYNET",
-  description: "프로젝트 찾지 말고, 물어보세요.",
+  description: "프로젝트. 찾지말고 물어보세요.",
 };
 
 export default function RootLayout({
