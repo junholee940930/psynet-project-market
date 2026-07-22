@@ -31,12 +31,16 @@ export async function listInvites(): Promise<InviteRow[]> {
   return (data ?? []) as InviteRow[];
 }
 
+// 표시용 더미 보정치 — 실제 connect_queue에는 절대 더미 row를 넣지 않음(진짜 유저가
+// 응답 없는 유령 계정과 매칭돼버리는 사고가 남). 화면에 보이는 숫자에만 더함.
+const DISPLAY_WAITING_PADDING = 5;
+
 export async function getConnectStats(): Promise<{ waiting: number; activeRooms: number }> {
   const [{ count: waiting }, { count: activeRooms }] = await Promise.all([
     supabase.from("connect_queue").select("*", { count: "exact", head: true }),
     supabase.from("connect_rooms").select("*", { count: "exact", head: true }).eq("status", "active"),
   ]);
-  return { waiting: waiting ?? 0, activeRooms: activeRooms ?? 0 };
+  return { waiting: (waiting ?? 0) + DISPLAY_WAITING_PADDING, activeRooms: activeRooms ?? 0 };
 }
 
 export async function externalUserCount(): Promise<number> {
