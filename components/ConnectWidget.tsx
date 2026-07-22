@@ -100,12 +100,36 @@ export default function ConnectWidget() {
     pollRef.current = setInterval(() => poll(s), 2000);
   }
 
+  async function startSimulation() {
+    if (!session) return;
+    if (pollRef.current) clearInterval(pollRef.current);
+    if (waitingRef.current) {
+      waitingRef.current = false;
+      await fetch("/api/connect/leave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(session),
+      }).catch(() => {});
+    }
+    const res = await fetch("/api/connect/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(session),
+    });
+    const data = await res.json();
+    if (data.ok) router.push(`/connect/room/${data.roomId}`);
+  }
+
   if (!session) return null;
 
   return (
     <div style={{ fontSize: 12, color: "#8c887e", marginTop: 8 }}>
       미토크리에이트 · 대기 중 {stats?.waiting ?? "-"}명 · 대화 중인 방 {stats?.activeRooms ?? "-"}개
       {waiting && <> · <span style={{ color: "#ffb800" }}>매칭 대기 중…</span></>}
+      {" · "}
+      <a href="#" onClick={(e) => { e.preventDefault(); startSimulation(); }} style={{ color: "#ffb800" }}>
+        시뮬레이션으로 체험해보기
+      </a>
     </div>
   );
 }

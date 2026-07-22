@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRoom, listMessages, partnerOf, sendMessage } from "@/lib/connect";
+import { getRoom, listMessages, maybeBotReply, partnerOf, sendMessage } from "@/lib/connect";
 
 export const runtime = "nodejs";
 
@@ -36,5 +36,6 @@ export async function POST(req: NextRequest) {
   }
 
   await sendMessage(roomId, phone, name, content);
+  await maybeBotReply(roomId, room); // 상대가 시뮬레이션 봇이면 자동 답장
   return NextResponse.json({ ok: true });
 }

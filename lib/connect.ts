@@ -108,6 +108,51 @@ export async function getRoom(roomId: number): Promise<ConnectRoomRow | null> {
   return (data as ConnectRoomRow) ?? null;
 }
 
+// 시뮬레이션 상대(봇). 대기인원 표시용 더미(+5)와 이름 맞춤 — 실제 큐/매칭에는 관여 안 함.
+const SIM_BOT_PHONES = ["sim-0001", "sim-0002", "sim-0003", "sim-0004", "sim-0005"];
+const SIM_BOT_NAMES = ["민준", "서연", "도윤", "하은", "지호"];
+const SIM_BOT_REPLIES = [
+  "오 그거 재밌는 얘기네요!",
+  "저도 그 분야 관심 많아요.",
+  "혹시 어떤 스킬 필요하세요?",
+  "같이 해보면 재밌을 것 같은데요?",
+  "괜찮은데요? 한번 해봐요.",
+  "오, 구체적으로 어떤 거 생각하고 계세요?",
+  "저 그거 예전에 비슷한 거 해본 적 있어요.",
+  "좋아요, 언제부터 시작할 수 있어요?",
+];
+
+export function isBotPhone(phone: string): boolean {
+  return phone.startsWith("sim-");
+}
+
+/** 시뮬레이션 매칭 — 실제 대기열(connect_queue) 안 거치고 봇과 바로 방 생성. */
+export async function startSimulatedMatch(phone: string, name: string): Promise<number> {
+  const i = Math.floor(Math.random() * SIM_BOT_PHONES.length);
+  const { data, error } = await supabase
+    .from("connect_rooms")
+    .insert({
+      participant_a_phone: phone,
+      participant_a_name: name,
+      participant_b_phone: SIM_BOT_PHONES[i],
+      participant_b_name: SIM_BOT_NAMES[i],
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return data.id as number;
+}
+
+/** 방 상대가 봇이면 자동으로 답장 하나 보냄(약간의 딜레이로 실제 대화처럼). */
+export async function maybeBotReply(roomId: number, room: ConnectRoomRow): Promise<void> {
+  const botPhone = [room.participant_a_phone, room.participant_b_phone].find(isBotPhone);
+  if (!botPhone) return;
+  const botName = room.participant_a_phone === botPhone ? room.participant_a_name : room.participant_b_name;
+  await new Promise((r) => setTimeout(r, 400 + Math.random() * 700));
+  const reply = SIM_BOT_REPLIES[Math.floor(Math.random() * SIM_BOT_REPLIES.length)];
+  await sendMessage(roomId, botPhone, botName, reply);
+}
+
 export function partnerOf(room: ConnectRoomRow, phone: string): { phone: string; name: string } {
   return room.participant_a_phone === phone
     ? { phone: room.participant_b_phone, name: room.participant_b_name }
