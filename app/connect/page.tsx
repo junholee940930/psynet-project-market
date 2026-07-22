@@ -21,17 +21,30 @@ export default function ConnectPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState("");
+  const [stats, setStats] = useState<{ waiting: number; activeRooms: number } | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const statsRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const s = loadSession();
     setSession(s);
     if (s) startMatching(s);
+
+    fetchStats();
+    statsRef.current = setInterval(fetchStats, 4000);
+
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
+      if (statsRef.current) clearInterval(statsRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function fetchStats() {
+    const res = await fetch("/api/connect/stats");
+    const data = await res.json();
+    if (data.ok) setStats({ waiting: data.waiting, activeRooms: data.activeRooms });
+  }
 
   async function poll(s: Session) {
     const res = await fetch("/api/connect/queue", {
@@ -72,6 +85,11 @@ export default function ConnectPage() {
     <main className="cards-page" style={{ maxWidth: 480, textAlign: "center" }}>
       <h1>미토크리에이트</h1>
       <p className="sub">낯선 동료와 랜덤으로 1:1 매칭돼서 대화하는 공간.</p>
+      {stats && (
+        <p className="sub" style={{ fontSize: 12, marginTop: 4 }}>
+          지금 대기 중 {stats.waiting}명 · 대화 중인 방 {stats.activeRooms}개
+        </p>
+      )}
 
       {!session ? (
         <p className="sub" style={{ marginTop: 24 }}>

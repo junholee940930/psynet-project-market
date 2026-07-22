@@ -31,6 +31,14 @@ export async function listInvites(): Promise<InviteRow[]> {
   return (data ?? []) as InviteRow[];
 }
 
+export async function getConnectStats(): Promise<{ waiting: number; activeRooms: number }> {
+  const [{ count: waiting }, { count: activeRooms }] = await Promise.all([
+    supabase.from("connect_queue").select("*", { count: "exact", head: true }),
+    supabase.from("connect_rooms").select("*", { count: "exact", head: true }).eq("status", "active"),
+  ]);
+  return { waiting: waiting ?? 0, activeRooms: activeRooms ?? 0 };
+}
+
 export async function externalUserCount(): Promise<number> {
   const { count, error } = await supabase
     .from("users")

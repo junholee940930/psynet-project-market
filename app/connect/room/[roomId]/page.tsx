@@ -31,8 +31,10 @@ export default function ConnectRoomPage() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [createdProjectTitle, setCreatedProjectTitle] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ waiting: number; activeRooms: number } | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const statsRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const s = loadSession();
@@ -69,6 +71,19 @@ export default function ConnectRoomPage() {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [session, roomId]);
+
+  useEffect(() => {
+    async function fetchStats() {
+      const res = await fetch("/api/connect/stats");
+      const data = await res.json();
+      if (data.ok) setStats({ waiting: data.waiting, activeRooms: data.activeRooms });
+    }
+    fetchStats();
+    statsRef.current = setInterval(fetchStats, 5000);
+    return () => {
+      if (statsRef.current) clearInterval(statsRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
@@ -140,6 +155,11 @@ export default function ConnectRoomPage() {
         <>
           <h1 style={{ marginBottom: 4 }}>{partner ? `${partner.name}님과 대화 중` : "연결 중…"}</h1>
           <p className="sub" style={{ marginTop: 0 }}>대화가 끝나면 이 방은 사라져. 신고/차단은 없고, 대신 서로 호감표시만 할 수 있어.</p>
+          {stats && (
+            <p className="sub" style={{ fontSize: 12 }}>
+              지금 미토크리에이트에 대기 중 {stats.waiting}명 · 대화 중인 방 {stats.activeRooms}개
+            </p>
+          )}
           <div
             ref={bodyRef}
             style={{
