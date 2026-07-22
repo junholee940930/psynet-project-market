@@ -1,4 +1,5 @@
 import Terminal from "@/components/Terminal";
+import ConnectWidget from "@/components/ConnectWidget";
 import { COMMAND_EXAMPLES } from "@/lib/examples";
 
 export default function StartPage() {
@@ -11,9 +12,8 @@ export default function StartPage() {
         </h1>
         <div className="nav">
           <a href="/projects">전체 프로젝트 보기 →</a>
-          {" · "}
-          <a href="/connect">미토크리에이트 →</a>
         </div>
+        <ConnectWidget />
       </section>
       <Terminal />
       <section className="examples">

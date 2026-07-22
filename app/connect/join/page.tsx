@@ -37,7 +37,7 @@ function ConnectJoinForm() {
         return;
       }
       window.localStorage.setItem(SESSION_KEY, JSON.stringify(data.session));
-      router.push("/connect");
+      router.push("/start");
     } finally {
       setLoading(false);
     }
