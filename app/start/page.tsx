@@ -7,7 +7,7 @@ export default function StartPage() {
       <section className="hero">
         <div className="eyebrow">PSYNET · PROJECT MARKET</div>
         <h1>
-          프로젝트를 찾고, <b>대화하듯</b> 신청한다
+          프로젝트. 찾지말고 <b>물어보세요</b>
         </h1>
         <div className="nav">
           <a href="/projects">전체 프로젝트 보기 →</a>
