@@ -24,10 +24,13 @@ export default function ConnectPage() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    setSession(loadSession());
+    const s = loadSession();
+    setSession(s);
+    if (s) startMatching(s);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function poll(s: Session) {
@@ -40,15 +43,17 @@ export default function ConnectPage() {
     if (data.ok && data.roomId) {
       if (pollRef.current) clearInterval(pollRef.current);
       router.push(`/connect/room/${data.roomId}`);
+    } else if (!data.ok) {
+      setError(data.error || "매칭 실패");
+      setWaiting(false);
     }
   }
 
-  async function startMatching() {
-    if (!session) return;
+  async function startMatching(s: Session) {
     setError("");
     setWaiting(true);
-    await poll(session);
-    pollRef.current = setInterval(() => poll(session), 2000);
+    await poll(s);
+    pollRef.current = setInterval(() => poll(s), 2000);
   }
 
   async function cancelMatching() {
@@ -75,11 +80,7 @@ export default function ConnectPage() {
       ) : (
         <div style={{ marginTop: 32 }}>
           <p className="sub">{session.name}님</p>
-          {!waiting ? (
-            <button onClick={startMatching} style={btnStyle}>
-              매칭 시작
-            </button>
-          ) : (
+          {waiting && (
             <>
               <p className="sub" style={{ margin: "16px 0" }}>
                 상대를 찾는 중… (대기자가 나타나면 자동으로 연결돼)
