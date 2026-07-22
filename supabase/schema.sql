@@ -51,3 +51,117 @@ create table if not exists users (
 -- 서버(API route)는 service role key로 접근하므로 RLS를 켜도 무방하지만,
 -- 이 프로젝트는 서버 경유로만 쓰기/읽기가 일어나므로 기본값(RLS off)으로 둔다.
 -- 추후 클라이언트에서 anon key로 직접 접근하게 바뀌면 RLS 정책을 반드시 추가할 것.
+
+-- ============================================================
+-- 미토크리에이트 (mitocreate) — 추천제 폐쇄형 랜덤 1:1 매칭 채팅
+-- 시드 멤버: 기존 users 전원. 외부인은 초대코드로만 가입, 초반 10명 한정(is_external 카운트로 제한).
+-- ============================================================
+
+alter table users add column if not exists is_external boolean not null default false;
+
+-- 초대코드. 관리자(/admin)에서 발급, 1회성. 외부인 가입 시 이 코드로만 users에 편입됨.
+create table if not exists invites (
+  id bigint generated always as identity primary key,
+  code text not null unique,
+  created_by text not null default 'admin',
+  used_by_phone text,
+  used_at timestamptz,
+  expires_at timestamptz not null default (now() + interval '14 days'),
+  created_at timestamptz not null default now()
+);
+
+-- 매칭 대기열. phone당 1건 — 재입장 시 대기 시각만 갱신.
+create table if not exists connect_queue (
+  phone text primary key,
+  name text not null,
+  joined_at timestamptz not null default now()
+);
+
+-- 1:1 채팅방. 종료되면 메시지는 삭제하고 이 row(참여자 기록 + 상태)만 남긴다 — "대화방은 사라진다"는
+-- 메시지 내용 얘기고, 누가 누구랑 매칭됐었는지 자체는 호감표시/프로젝트생성 매칭에 필요해서 남겨둠.
+create table if not exists connect_rooms (
+  id bigint generated always as identity primary key,
+  participant_a_phone text not null,
+  participant_a_name text not null,
+  participant_b_phone text not null,
+  participant_b_name text not null,
+  status text not null default 'active', -- active | ended
+  created_at timestamptz not null default now(),
+  ended_at timestamptz
+);
+
+-- 채팅 메시지. 방 종료 시 전부 delete — 영구 로그 없음.
+create table if not exists connect_messages (
+  id bigint generated always as identity primary key,
+  room_id bigint not null references connect_rooms(id) on delete cascade,
+  sender_phone text not null,
+  sender_name text not null,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists connect_messages_room_id_idx on connect_messages (room_id);
+
+-- 대화 종료 후 호감표시. 신고/차단 없음 — 이것만 제공.
+create table if not exists connect_likes (
+  id bigint generated always as identity primary key,
+  room_id bigint not null references connect_rooms(id) on delete cascade,
+  liker_phone text not null,
+  liked_phone text not null,
+  created_at timestamptz not null default now(),
+  unique (room_id, liker_phone)
+);
+
+-- 호감표시(상호) 후 그 자리에서 바로 만드는 프로젝트. 기존 정적 카탈로그(data/projects.json)와는
+-- 별개 — 신청/승인 절차 없이 매칭된 두 사람이 이미 PM+참여자로 확정된 상태로 생성.
+create table if not exists connect_projects (
+  id bigint generated always as identity primary key,
+  room_id bigint not null references connect_rooms(id),
+  title text not null,
+  summary text,
+  pm_phone text not null,
+  pm_name text not null,
+  partner_phone text not null,
+  partner_name text not null,
+  created_at timestamptz not null default now()
+);
+
+-- 매칭 로직 원자적 처리(동시 요청 레이스 방지) — for update skip locked로 동시성 안전하게 처리.
+-- 반환: room_id(매칭 성사 시 방 id, 아니면 null)
+create or replace function connect_match_or_queue(p_phone text, p_name text)
+returns bigint as $$
+declare
+  v_partner record;
+  v_room_id bigint;
+begin
+  -- 이미 활성 방에 있으면 그 방 반환 (새로고침/재진입 대응)
+  select id into v_room_id from connect_rooms
+    where status = 'active'
+      and (participant_a_phone = p_phone or participant_b_phone = p_phone)
+    limit 1;
+  if v_room_id is not null then
+    return v_room_id;
+  end if;
+
+  -- 대기열에서 상대 탐색
+  select * into v_partner from connect_queue
+    where phone <> p_phone
+    order by joined_at
+    limit 1
+    for update skip locked;
+
+  if v_partner is not null then
+    delete from connect_queue where phone = v_partner.phone;
+    delete from connect_queue where phone = p_phone;
+    insert into connect_rooms (participant_a_phone, participant_a_name, participant_b_phone, participant_b_name)
+      values (p_phone, p_name, v_partner.phone, v_partner.name)
+      returning id into v_room_id;
+    return v_room_id;
+  end if;
+
+  -- 상대 없으면 대기열 등록(갱신)
+  insert into connect_queue (phone, name) values (p_phone, p_name)
+    on conflict (phone) do update set joined_at = now(), name = excluded.name;
+  return null;
+end;
+$$ language plpgsql;

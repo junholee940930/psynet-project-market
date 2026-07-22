@@ -1,9 +1,11 @@
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, adminPasswordConfigured, isValidAdminToken } from "@/lib/adminAuth";
 import { getAdminApplications, getAllUsers } from "@/lib/admin";
+import { externalUserCount, listInvites } from "@/lib/connect";
 import AdminLogin from "@/components/AdminLogin";
 import AdminLogout from "@/components/AdminLogout";
 import AdminApplicationActions from "@/components/AdminApplicationActions";
+import AdminInviteIssuer from "@/components/AdminInviteIssuer";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +32,12 @@ export default async function AdminPage() {
     return <AdminLogin />;
   }
 
-  const [projectApps, users] = await Promise.all([getAdminApplications(), getAllUsers()]);
+  const [projectApps, users, invites, externalCount] = await Promise.all([
+    getAdminApplications(),
+    getAllUsers(),
+    listInvites(),
+    externalUserCount(),
+  ]);
   const pendingTotal = projectApps.reduce(
     (s, p) => s + p.applications.filter((a) => a.status === "pending").length,
     0
@@ -89,6 +96,11 @@ export default async function AdminPage() {
           </table>
         </div>
       )}
+
+      <h2 style={{ marginTop: 28, marginBottom: 8 }}>
+        미토크리에이트 초대코드 (외부인 {externalCount}/10명)
+      </h2>
+      <AdminInviteIssuer invites={invites} />
 
       <h2 style={{ marginTop: 28, marginBottom: 8 }}>프로젝트 신청 현황</h2>
       <p className="sub" style={{ marginTop: 0 }}>

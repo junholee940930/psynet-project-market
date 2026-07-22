@@ -41,4 +41,55 @@ export type UserRow = {
   completed_projects: string[];
   created_at: string;
   last_login_at: string;
+  is_external: boolean;
+};
+
+export type InviteRow = {
+  id: number;
+  code: string;
+  created_by: string;
+  used_by_phone: string | null;
+  used_at: string | null;
+  expires_at: string;
+  created_at: string;
+};
+
+export type ConnectRoomRow = {
+  id: number;
+  participant_a_phone: string;
+  participant_a_name: string;
+  participant_b_phone: string;
+  participant_b_name: string;
+  status: "active" | "ended";
+  created_at: string;
+  ended_at: string | null;
+};
+
+export type ConnectMessageRow = {
+  id: number;
+  room_id: number;
+  sender_phone: string;
+  sender_name: string;
+  content: string;
+  created_at: string;
+};
+
+export type ConnectLikeRow = {
+  id: number;
+  room_id: number;
+  liker_phone: string;
+  liked_phone: string;
+  created_at: string;
+};
+
+export type ConnectProjectRow = {
+  id: number;
+  room_id: number;
+  title: string;
+  summary: string | null;
+  pm_phone: string;
+  pm_name: string;
+  partner_phone: string;
+  partner_name: string;
+  created_at: string;
 };

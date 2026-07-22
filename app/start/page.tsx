@@ -11,6 +11,8 @@ export default function StartPage() {
         </h1>
         <div className="nav">
           <a href="/projects">전체 프로젝트 보기 →</a>
+          {" · "}
+          <a href="/connect">미토크리에이트 →</a>
         </div>
       </section>
       <Terminal />
