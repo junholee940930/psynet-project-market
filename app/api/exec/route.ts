@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processCommand } from "@/lib/commands";
+import { lastDebug } from "@/lib/aiCommand";
 import type { Session } from "@/lib/auth";
 
 export const runtime = "nodejs";
@@ -30,5 +31,8 @@ export async function POST(req: NextRequest) {
     lastProjectId: typeof body.lastProjectId === "string" ? body.lastProjectId : null,
   });
 
+  if (body.debug === true) {
+    return NextResponse.json({ ...result, _aiDebug: lastDebug });
+  }
   return NextResponse.json(result);
 }
