@@ -11,6 +11,7 @@
     "migrate:projects": "node scripts/migrate-projects.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@supabase/supabase-js": "^2.45.4",
     "next": "^15.0.3",
     "react": "^18.3.1",

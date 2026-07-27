@@ -15,6 +15,7 @@ import { supabase, type ApplicationRow } from "@/lib/supabase";
 import { ALL_SKILLS, getProject, gradeFor, listProjects, type Project } from "@/lib/projects";
 import { extractEmail, extractPhone, findOrCreateUser, getUserByPhone, normalizePhone, type Session } from "@/lib/auth";
 import { getOwnedProjectIds } from "@/lib/pmMap";
+import { interpret, type AiResult } from "@/lib/aiCommand";
 
 export type CommandContext = {
   session: Session | null;
@@ -191,6 +192,51 @@ function nlToCommand(
   return { command: null, lastProjectId };
 }
 
+/** AI가 준 구조화된 의도 → 실제 명령 문자열. 프로젝트 매칭은 여기 결정적 코드가 담당. */
+function aiToCommand(
+  ai: AiResult,
+  lastProjectId: string | null,
+  session: Session | null
+): { command: string | null; lastProjectId: string | null } {
+  const kw = ai.keywords.join(" ").trim();
+  switch (ai.intent) {
+    case "count":
+      return { command: "개수", lastProjectId };
+    case "my_applications":
+      return { command: "내신청", lastProjectId };
+    case "my_projects":
+      return { command: "내프로젝트", lastProjectId };
+    case "profile":
+      return { command: "프로필", lastProjectId };
+    case "logout":
+      return { command: "로그아웃", lastProjectId };
+    case "help":
+      return { command: "도움말", lastProjectId };
+    case "skill_set":
+      return ai.skills.length ? { command: `스킬 ${ai.skills.join(",")}`, lastProjectId } : { command: null, lastProjectId };
+    case "skill_add":
+      return ai.skills.length ? { command: `스킬추가 ${ai.skills.join(",")}`, lastProjectId } : { command: null, lastProjectId };
+    case "skill_remove":
+      return ai.skills.length ? { command: `스킬삭제 ${ai.skills.join(",")}`, lastProjectId } : { command: null, lastProjectId };
+    case "status": {
+      const target = pickTarget(kw, null, lastProjectId);
+      return target ? { command: `방 ${target}`, lastProjectId: target } : { command: null, lastProjectId };
+    }
+    case "apply": {
+      const target = pickTarget(kw, null, lastProjectId);
+      if (!target) return { command: null, lastProjectId };
+      const name = session?.name ?? "나";
+      return { command: `신청 ${target} ${name}`, lastProjectId: target };
+    }
+    case "search": {
+      const terms = [kw, ...ai.skills].filter(Boolean).join(" ").trim();
+      return { command: terms ? `매칭 ${terms}` : "매칭", lastProjectId };
+    }
+    default:
+      return { command: null, lastProjectId };
+  }
+}
+
 async function readApps(projectId: string): Promise<ApplicationRow[]> {
   const { data, error } = await supabase
     .from("applications")
@@ -236,6 +282,17 @@ export async function processCommand(rawLine: string, ctx: CommandContext): Prom
     if (converted.command) {
       parts = converted.command.split(/\s+/);
       cmd = parts[0];
+    } else {
+      // 규칙 파서가 못 잡음 → AI 폴백(키 없으면 null). 운영 중 제각각인 표현 대응.
+      const ai = await interpret(line);
+      if (ai) {
+        const aiCmd = aiToCommand(ai, lastProjectId, ctx.session);
+        lastProjectId = aiCmd.lastProjectId;
+        if (aiCmd.command) {
+          parts = aiCmd.command.split(/\s+/);
+          cmd = parts[0];
+        }
+      }
     }
   }
 
