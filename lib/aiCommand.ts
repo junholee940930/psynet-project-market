@@ -84,19 +84,10 @@ keywords: 검색이나 프로젝트 지목에 쓸 자유 키워드(프로젝트�
 skills: 문장에 등장한, 아래 목록에 있는 스킬만. 없으면 빈 배열.
 사용 가능한 스킬: ${ALL_SKILLS.join(", ")}`;
 
-// 임시 진단용: 마지막 interpret 시도 상태 (키 값은 담지 않음)
-export let lastDebug: { hasKey: boolean; attempted: boolean; error: string | null } = {
-  hasKey: false,
-  attempted: false,
-  error: null,
-};
-
 /** 자유 문장 → 구조화된 의도. 실패/키없음 시 null. */
 export async function interpret(line: string): Promise<AiResult | null> {
   const c = getClient();
-  lastDebug = { hasKey: !!c, attempted: false, error: null };
   if (!c) return null;
-  lastDebug.attempted = true;
   try {
     const res = await c.messages.create({
       model: "claude-haiku-4-5",
@@ -113,8 +104,7 @@ export async function interpret(line: string): Promise<AiResult | null> {
       keywords: Array.isArray(parsed.keywords) ? parsed.keywords.filter(Boolean) : [],
       skills: Array.isArray(parsed.skills) ? parsed.skills.filter((s) => ALL_SKILLS.includes(s as never)) : [],
     };
-  } catch (e) {
-    lastDebug.error = e instanceof Error ? e.message : String(e);
+  } catch {
     return null; // API 오류 시 조용히 규칙 파서로 폴백
   }
 }
