@@ -67,6 +67,9 @@ export default function Terminal() {
   const msgPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const likePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statsPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const simFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const SIM_FALLBACK_MS = 8000; // 실제 유저 매칭 대기 후 이 시간 지나면 봇 매칭으로 폴백
 
   useEffect(() => {
     modeRef.current = mode;
@@ -104,6 +107,7 @@ export default function Terminal() {
     if (msgPollRef.current) clearInterval(msgPollRef.current);
     if (likePollRef.current) clearInterval(likePollRef.current);
     if (statsPollRef.current) clearInterval(statsPollRef.current);
+    if (simFallbackRef.current) clearTimeout(simFallbackRef.current);
   }
 
   function append(text: string, cls?: LogLine["cls"]) {
@@ -130,6 +134,11 @@ export default function Terminal() {
   // ---------- 매칭 대기 ----------
   async function startMatchPolling(s: Session) {
     waitingRef.current = true;
+    if (simFallbackRef.current) clearTimeout(simFallbackRef.current);
+    simFallbackRef.current = setTimeout(() => {
+      // 일정 시간 실제 유저가 안 잡히면 봇 매칭으로 폴백
+      if (waitingRef.current && modeRef.current === "command") startSimulation();
+    }, SIM_FALLBACK_MS);
     await matchPoll(s);
     matchPollRef.current = setInterval(() => matchPoll(s), 2500);
   }
@@ -144,6 +153,7 @@ export default function Terminal() {
     const data = await res.json();
     if (data.ok && data.roomId) {
       if (matchPollRef.current) clearInterval(matchPollRef.current);
+      if (simFallbackRef.current) clearTimeout(simFallbackRef.current);
       waitingRef.current = false;
       enterRoom(data.roomId, true);
     } else if (!data.ok) {
@@ -181,8 +191,8 @@ export default function Terminal() {
     for (const m of data.messages as { id: number; sender_phone: string; sender_name: string; content: string }[]) {
       if (m.id <= lastMsgIdRef.current) continue;
       lastMsgIdRef.current = m.id;
-      const who = m.sender_phone === myPhone ? "나" : m.sender_name;
-      append(`${who}: ${m.content}`, m.sender_phone === myPhone ? "dim" : undefined);
+      if (m.sender_phone === myPhone) continue; // 내 메시지는 입력 시 이미 "❯ ..."로 에코됨
+      append(`${m.sender_name}: ${m.content}`);
     }
     if (data.room.status === "ended" && modeRef.current === "connect-chat") {
       if (msgPollRef.current) clearInterval(msgPollRef.current);
@@ -273,6 +283,7 @@ export default function Terminal() {
   async function startSimulation() {
     if (!sessionRef.current) return;
     if (matchPollRef.current) clearInterval(matchPollRef.current);
+    if (simFallbackRef.current) clearTimeout(simFallbackRef.current);
     if (waitingRef.current) {
       waitingRef.current = false;
       await fetch("/api/connect/leave", {
@@ -376,12 +387,7 @@ export default function Terminal() {
     }
   }
 
-  const prompt =
-    mode === "connect-chat" && partner
-      ? `${partner.name}❯`
-      : session
-      ? `${session.name}❯`
-      : "❯";
+  const prompt = session ? `${session.name} >` : ">";
 
   return (
     <div className="term-wrap">

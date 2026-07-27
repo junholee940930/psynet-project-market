@@ -1,0 +1,18 @@
+{
+  "season": "2026 시즌1",
+  "note": "프로젝트 목록_26시즌1.xlsx에서 집계. invest=투자금(원), reward=성과금 합계(원). 보안 관련 프로젝트 제외, 참여자 이름은 성만 노출(별표 마스킹).",
+  "projects": [
+    { "title": "라이브스코어 시스템 유지보수", "invest": 26000000 },
+    { "title": "유저중계 1단계 구축", "invest": 25000000 },
+    { "title": "배당 통계 분석 에이전트", "invest": 25000000 },
+    { "title": "iOS 라이브스코어 유지보수", "invest": 24000000 },
+    { "title": "SafeDriving 라이브스코어 유지보수", "invest": 23000000 }
+  ],
+  "people": [
+    { "name": "김**", "reward": 37571210, "projects": 9 },
+    { "name": "양**", "reward": 36916824, "projects": 7 },
+    { "name": "임**", "reward": 32684000, "projects": 18 },
+    { "name": "김**", "reward": 29306952, "projects": 10 },
+    { "name": "이**", "reward": 26746824, "projects": 10 }
+  ]
+}
