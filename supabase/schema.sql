@@ -165,3 +165,22 @@ begin
   return null;
 end;
 $$ language plpgsql;
+
+-- ============================================================
+-- 프로젝트 참여자 명단. 사람(실명)↔프로젝트 매핑.
+-- 미토크리에이트 매칭에서 "호감" 성사 시 상대의 참여 프로젝트 리스트를 보여주는 데 사용.
+-- 관리자(/admin)에서 추가/삭제. 실명이 들어가므로(공개 GitHub) 이 테이블은 DB에만 채운다
+-- — scripts/seed-participants.mjs(로컬 1회)로 시즌 엑셀에서 시드, 이후 관리자에서 관리.
+-- project_id는 data/projects.json의 id와 동일 규칙(prj-2026-2-xxx, 소문자).
+-- ============================================================
+create table if not exists project_participants (
+  id bigint generated always as identity primary key,
+  project_id text not null,
+  name text not null,
+  role text not null default '협업자', -- PM | 협업자
+  created_at timestamptz not null default now(),
+  unique (project_id, name)
+);
+
+create index if not exists project_participants_name_idx on project_participants (name);
+create index if not exists project_participants_project_idx on project_participants (project_id);

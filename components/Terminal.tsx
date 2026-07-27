@@ -4,10 +4,17 @@ import { useEffect, useRef, useState } from "react";
 
 type LogLine = { text: string; cls?: "u" | "dim" | "banner" };
 type Session = { name: string; phone: string };
-type Mode = "command" | "connect-waiting" | "connect-chat" | "connect-ended" | "connect-liked" | "connect-project";
+type Mode =
+  | "command"
+  | "connect-waiting"
+  | "connect-chat"
+  | "connect-ended"
+  | "connect-liked"
+  | "connect-select"
+  | "connect-project";
+type ParticipantProject = { projectId: string; title: string; role: string };
 
 const SESSION_KEY = "pm_session";
-const SIM_TRIGGERS = new Set(["시뮬레이션", "시뮬레이션 체험", "미토크리에이트 시뮬레이션", "미토크리에이트"]);
 
 function loadSession(): Session | null {
   if (typeof window === "undefined") return null;
@@ -55,6 +62,8 @@ export default function Terminal() {
   const [mode, setMode] = useState<Mode>("command");
   const [partner, setPartner] = useState<{ name: string; phone: string } | null>(null);
   const [stats, setStats] = useState<{ waiting: number; activeRooms: number } | null>(null);
+  const [selectItems, setSelectItems] = useState<ParticipantProject[]>([]);
+  const [selectIdx, setSelectIdx] = useState(0);
   const termRef = useRef<HTMLDivElement>(null);
 
   const modeRef = useRef<Mode>("command");
@@ -67,9 +76,6 @@ export default function Terminal() {
   const msgPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const likePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statsPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const simFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const SIM_FALLBACK_MS = 8000; // 실제 유저 매칭 대기 후 이 시간 지나면 봇 매칭으로 폴백
 
   useEffect(() => {
     modeRef.current = mode;
@@ -107,7 +113,6 @@ export default function Terminal() {
     if (msgPollRef.current) clearInterval(msgPollRef.current);
     if (likePollRef.current) clearInterval(likePollRef.current);
     if (statsPollRef.current) clearInterval(statsPollRef.current);
-    if (simFallbackRef.current) clearTimeout(simFallbackRef.current);
   }
 
   function append(text: string, cls?: LogLine["cls"]) {
@@ -134,11 +139,6 @@ export default function Terminal() {
   // ---------- 매칭 대기 ----------
   async function startMatchPolling(s: Session) {
     waitingRef.current = true;
-    if (simFallbackRef.current) clearTimeout(simFallbackRef.current);
-    simFallbackRef.current = setTimeout(() => {
-      // 일정 시간 실제 유저가 안 잡히면 봇 매칭으로 폴백
-      if (waitingRef.current && modeRef.current === "command") startSimulation();
-    }, SIM_FALLBACK_MS);
     await matchPoll(s);
     matchPollRef.current = setInterval(() => matchPoll(s), 2500);
   }
@@ -153,7 +153,6 @@ export default function Terminal() {
     const data = await res.json();
     if (data.ok && data.roomId) {
       if (matchPollRef.current) clearInterval(matchPollRef.current);
-      if (simFallbackRef.current) clearTimeout(simFallbackRef.current);
       waitingRef.current = false;
       enterRoom(data.roomId, true);
     } else if (!data.ok) {
@@ -162,7 +161,7 @@ export default function Terminal() {
     }
   }
 
-  // ---------- 방 입장 (매칭 성사 또는 시뮬레이션) ----------
+  // ---------- 방 입장 (실제 유저 매칭 성사 시) ----------
   async function enterRoom(roomId: number, announce: boolean) {
     roomIdRef.current = roomId;
     lastMsgIdRef.current = 0;
@@ -228,16 +227,65 @@ export default function Terminal() {
     });
     const data = await res.json();
     if (data.ok && data.mutual) {
-      setMode("connect-project");
-      modeRef.current = "connect-project";
-      append(`━━ 서로 호감이야! 🎉 ━━`, "banner");
-      append(`${partnerRef.current?.name}님과 바로 프로젝트 시작해봐. 프로젝트 제목을 입력해줘 (그만하려면 "취소").`, "dim");
+      onMutualLike();
     } else if (data.ok) {
       setMode("connect-liked");
       modeRef.current = "connect-liked";
       append(`호감 표시했어. ${partnerRef.current?.name}님도 하면 여기서 알려줄게…`, "dim");
       likePollRef.current = setInterval(pollLike, 3000);
     }
+  }
+
+  // 서로 호감 성사 → 상대의 참여 프로젝트 리스트를 불러와 선택 모드로. 없으면 새 프로젝트 생성 폴백.
+  async function onMutualLike() {
+    if (likePollRef.current) clearInterval(likePollRef.current);
+    append(`━━ 서로 호감이야! 🎉 ━━`, "banner");
+    const name = partnerRef.current?.name;
+    let projects: ParticipantProject[] = [];
+    if (name) {
+      try {
+        const res = await fetch("/api/connect/partner-projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        });
+        const data = await res.json();
+        if (data.ok && Array.isArray(data.projects)) projects = data.projects;
+      } catch {
+        /* 폴백 */
+      }
+    }
+    if (projects.length) {
+      setSelectItems(projects);
+      setSelectIdx(0);
+      setMode("connect-select");
+      modeRef.current = "connect-select";
+      append(`${name}님이 참여 중인 프로젝트야. 함께 참여할 걸 골라봐 (↑/↓ 이동, Enter 선택, 마우스 클릭도 돼. "취소"로 넘어가기).`, "dim");
+    } else {
+      setMode("connect-project");
+      modeRef.current = "connect-project";
+      append(`${name}님과 바로 프로젝트 시작해봐. 프로젝트 제목을 입력해줘 (그만하려면 "취소").`, "dim");
+    }
+  }
+
+  // 리스트에서 프로젝트 선택 → 그 프로젝트에 함께 참여/신청.
+  async function chooseProject(item: ParticipantProject) {
+    if (!sessionRef.current) return;
+    setMode("command");
+    modeRef.current = "command";
+    setSelectItems([]);
+    try {
+      const res = await fetch("/api/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cmd: `신청 ${item.projectId} ${sessionRef.current.name}`, session: sessionRef.current, lastProjectId: null }),
+      });
+      const data = await res.json();
+      append(`『${item.title}』에 함께 참여 신청했어. ${data.output || ""}`.trim(), "banner");
+    } catch {
+      append("[오류] 신청 처리 실패");
+    }
+    backToCommand();
   }
 
   async function pollLike() {
@@ -250,10 +298,7 @@ export default function Terminal() {
     const data = await res.json();
     if (data.ok && data.mutual) {
       if (likePollRef.current) clearInterval(likePollRef.current);
-      setMode("connect-project");
-      modeRef.current = "connect-project";
-      append(`━━ 서로 호감이야! 🎉 ━━`, "banner");
-      append(`${partnerRef.current?.name}님과 바로 프로젝트 시작해봐. 프로젝트 제목을 입력해줘 (그만하려면 "취소").`, "dim");
+      onMutualLike();
     }
   }
 
@@ -278,27 +323,6 @@ export default function Terminal() {
     modeRef.current = "command";
     append(`이제 다시 프로젝트 검색할 수 있어.`, "dim");
     if (sessionRef.current) startMatchPolling(sessionRef.current);
-  }
-
-  async function startSimulation() {
-    if (!sessionRef.current) return;
-    if (matchPollRef.current) clearInterval(matchPollRef.current);
-    if (simFallbackRef.current) clearTimeout(simFallbackRef.current);
-    if (waitingRef.current) {
-      waitingRef.current = false;
-      await fetch("/api/connect/leave", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sessionRef.current),
-      }).catch(() => {});
-    }
-    const res = await fetch("/api/connect/simulate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(sessionRef.current),
-    });
-    const data = await res.json();
-    if (data.ok) enterRoom(data.roomId, true);
   }
 
   // ---------- 입력 처리 ----------
@@ -330,17 +354,22 @@ export default function Terminal() {
       return; // 상대 호감 기다리는 중 — 입력 무시
     }
 
+    if (mode === "connect-select") {
+      // 선택은 방향키/마우스로. 타이핑은 "취소"만 처리.
+      if (cmd === "취소") {
+        setSelectItems([]);
+        append("취소했어.", "dim");
+        return backToCommand();
+      }
+      return;
+    }
+
     if (mode === "connect-project") {
       if (cmd === "취소") {
         append("취소했어.", "dim");
         return backToCommand();
       }
       return createProject(cmd);
-    }
-
-    // 일반 명령 모드
-    if (SIM_TRIGGERS.has(cmd)) {
-      return startSimulation();
     }
 
     try {
@@ -363,6 +392,36 @@ export default function Terminal() {
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // 선택 리스트 모드: 방향키로 이동, Enter로 선택, Esc로 취소
+    if (mode === "connect-select" && selectItems.length) {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectIdx((i) => (i - 1 + selectItems.length) % selectItems.length);
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectIdx((i) => (i + 1) % selectItems.length);
+        return;
+      }
+      if (e.key === "Enter") {
+        if (e.nativeEvent.isComposing) return;
+        e.preventDefault();
+        const item = selectItems[selectIdx];
+        if (item) {
+          append("❯ " + item.title, "u");
+          chooseProject(item);
+        }
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setSelectItems([]);
+        append("취소했어.", "dim");
+        backToCommand();
+        return;
+      }
+    }
     if (e.key === "Enter") {
       if (e.nativeEvent.isComposing) return; // 한글 IME 조합 중 엔터 무시
       submit(value);
@@ -411,6 +470,29 @@ export default function Terminal() {
               {l.text}
             </div>
           ))}
+          {mode === "connect-select" &&
+            selectItems.map((item, i) => (
+              <div
+                key={item.projectId}
+                onMouseEnter={() => setSelectIdx(i)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  append("❯ " + item.title, "u");
+                  chooseProject(item);
+                }}
+                style={{
+                  cursor: "pointer",
+                  padding: "2px 8px",
+                  borderRadius: 4,
+                  background: i === selectIdx ? "#1f3a24" : "transparent",
+                  color: i === selectIdx ? "#7CFF9B" : "#c9c5b8",
+                }}
+              >
+                {i === selectIdx ? "▸ " : "  "}
+                {item.title}
+                {item.role === "PM" ? "  (PM)" : ""}
+              </div>
+            ))}
         </div>
         <div id="inputLine">
           <span id="prompt">{prompt}</span>

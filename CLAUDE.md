@@ -71,4 +71,5 @@ PSYNET 내부 프로젝트 매칭 플랫폼. Next.js 15(App Router) + TypeScript
 
 - 미토크리에이트에서 생성된 프로젝트(`connect_projects`)가 메인 카탈로그(`/projects`, "매칭" 명령)에 안 뜸 — 통합하려면 `lib/projects.ts`를 정적 JSON 전용에서 DB 병합 구조로 바꿔야 함(꽤 큰 리팩터).
 - `data/projects.json` 재생성이 애드혹 스크립트 기반이라 재현 가능한 파이프라인이 없음 — 다음에 엑셀 새로 받으면 다시 스크립트 짜야 함.
+- **프로젝트 참여자(project_participants)**: 사람(실명)↔프로젝트 매핑. 미토크리에이트에서 서로 호감이면 상대의 참여 프로젝트 리스트를 터미널에 띄우고(↑/↓·마우스 선택) 선택 시 그 프로젝트에 함께 참여 신청. 관리자(/admin)에서 추가/삭제. 실명이 들어가 public GitHub엔 스키마만 커밋 — 시드는 `source-data/season2-participants.json`(git 제외) + `node scripts/seed-participants.mjs`(로컬 1회, .env.local 사용). **선행: Supabase SQL 편집기에서 project_participants 테이블 생성(schema.sql 참고).** 시즌1 봇(민준/서연/도윤/하은/지호) 및 /api/connect/simulate는 제거됨 — 매칭은 실제 유저 2명 이상일 때만.
 - **(향후) 이벤트형 매칭 활성화**: 지금은 "상대가 큐에 있으면 상시 즉시 매칭"인데, 나중에는 조건 충족 시에만 매칭이 열리는 구조로 전환 고려 — 예) 동시 접속자 100명 이상일 때, 또는 정해진 시간대(밤 9시 등)에만 활성화. 대기 인원 게이트/스케줄 게이트를 큐 로직(`connect_match_or_queue`) 앞단에 두는 형태. 접속자 수 트래킹(현재는 `connect_queue` count + 더미 +5만 있음)과 활성 시간 관리가 선행 필요.

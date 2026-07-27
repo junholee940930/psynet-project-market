@@ -93,3 +93,11 @@ export type ConnectProjectRow = {
   partner_name: string;
   created_at: string;
 };
+
+export type ProjectParticipantRow = {
+  id: number;
+  project_id: string;
+  name: string;
+  role: string;
+  created_at: string;
+};
