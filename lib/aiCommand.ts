@@ -90,7 +90,7 @@ export async function interpret(line: string): Promise<AiResult | null> {
   if (!c) return null;
   try {
     const res = await c.messages.create({
-      model: "claude-opus-4-8",
+      model: "claude-haiku-4-5",
       max_tokens: 1024,
       system: SYSTEM,
       output_config: { format: { type: "json_schema", schema: SCHEMA } },
