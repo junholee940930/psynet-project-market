@@ -10,11 +10,11 @@ export async function POST(req: NextRequest) {
   const phone = normalizePhone(typeof body?.phone === "string" ? body.phone : "");
   if (!name || !phone) return NextResponse.json({ ok: false, error: "로그인 정보 없음" }, { status: 400 });
 
-  // 실명제 폐쇄형 — users에 이미 등록된 사람(기존 프로젝트 마켓 유저 또는 초대코드로 가입한 외부인)만 입장 가능.
+  // 매칭 전 로그인 필요 — 터미널에서 이름+전화번호로 로그인하면 자동 등록됨.
   const user = await getUserByPhone(phone);
   if (!user) {
     return NextResponse.json(
-      { ok: false, error: "가입된 계정이 아니야. 터미널에서 먼저 로그인하거나 초대코드로 가입해줘." },
+      { ok: false, error: "먼저 터미널에서 로그인해줘 (이름 전화번호)." },
       { status: 403 }
     );
   }

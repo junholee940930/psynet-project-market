@@ -44,16 +44,6 @@ export type UserRow = {
   is_external: boolean;
 };
 
-export type InviteRow = {
-  id: number;
-  code: string;
-  created_by: string;
-  used_by_phone: string | null;
-  used_at: string | null;
-  expires_at: string;
-  created_at: string;
-};
-
 export type ConnectRoomRow = {
   id: number;
   participant_a_phone: string;

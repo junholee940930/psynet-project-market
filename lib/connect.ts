@@ -1,87 +1,17 @@
-import { randomBytes } from "node:crypto";
 import {
   supabase,
   type ConnectLikeRow,
   type ConnectMessageRow,
   type ConnectProjectRow,
   type ConnectRoomRow,
-  type InviteRow,
 } from "@/lib/supabase";
-import { findOrCreateUser } from "@/lib/auth";
-
-const MAX_EXTERNAL_USERS = 10;
-
-export function generateInviteCode(): string {
-  return randomBytes(4).toString("hex"); // 8자리
-}
-
-export async function createInvite(): Promise<InviteRow> {
-  const code = generateInviteCode();
-  const { data, error } = await supabase.from("invites").insert({ code }).select("*").single();
-  if (error) throw new Error(error.message);
-  return data as InviteRow;
-}
-
-export async function listInvites(): Promise<InviteRow[]> {
-  const { data, error } = await supabase
-    .from("invites")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as InviteRow[];
-}
-
-// 표시용 더미 보정치 — 실제 connect_queue에는 절대 더미 row를 넣지 않음(진짜 유저가
-// 응답 없는 유령 계정과 매칭돼버리는 사고가 남). 화면에 보이는 숫자에만 더함.
-const DISPLAY_WAITING_PADDING = 5;
 
 export async function getConnectStats(): Promise<{ waiting: number; activeRooms: number }> {
   const [{ count: waiting }, { count: activeRooms }] = await Promise.all([
     supabase.from("connect_queue").select("*", { count: "exact", head: true }),
     supabase.from("connect_rooms").select("*", { count: "exact", head: true }).eq("status", "active"),
   ]);
-  return { waiting: (waiting ?? 0) + DISPLAY_WAITING_PADDING, activeRooms: activeRooms ?? 0 };
-}
-
-export async function externalUserCount(): Promise<number> {
-  const { count, error } = await supabase
-    .from("users")
-    .select("*", { count: "exact", head: true })
-    .eq("is_external", true);
-  if (error) throw new Error(error.message);
-  return count ?? 0;
-}
-
-type RedeemResult =
-  | { ok: true; session: { name: string; phone: string } }
-  | { ok: false; error: string };
-
-export async function redeemInvite(code: string, name: string, phone: string): Promise<RedeemResult> {
-  const { data: invite, error: findErr } = await supabase
-    .from("invites")
-    .select("*")
-    .eq("code", code)
-    .maybeSingle();
-  if (findErr) throw new Error(findErr.message);
-  if (!invite) return { ok: false, error: "존재하지 않는 초대코드야." };
-  if (invite.used_at) return { ok: false, error: "이미 사용된 초대코드야." };
-  if (new Date(invite.expires_at).getTime() < Date.now()) {
-    return { ok: false, error: "만료된 초대코드야." };
-  }
-
-  const count = await externalUserCount();
-  if (count >= MAX_EXTERNAL_USERS) {
-    return { ok: false, error: "외부 인원 한도(10명)를 초과했어. 다음 기회에!" };
-  }
-
-  const user = await findOrCreateUser(name, phone, null);
-  await supabase.from("users").update({ is_external: true }).eq("phone", phone);
-  await supabase
-    .from("invites")
-    .update({ used_by_phone: phone, used_at: new Date().toISOString() })
-    .eq("id", invite.id);
-
-  return { ok: true, session: { name: user.name, phone: user.phone } };
+  return { waiting: waiting ?? 0, activeRooms: activeRooms ?? 0 };
 }
 
 /** 매칭 큐 진입/폴링. 상대가 대기 중이면 즉시 매칭해 room_id 반환, 없으면 null(대기중). */
