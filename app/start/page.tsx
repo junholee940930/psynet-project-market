@@ -30,9 +30,6 @@ export default function StartPage() {
         >
           🟢 지금 <b>{recruitingCount}개</b> 프로젝트가 사람 구하는 중 — 참여하면 성과금. 합류 가능한 프로젝트 보기 →
         </a>
-        <div className="nav">
-          <a href="/projects">전체 프로젝트 보기 →</a>
-        </div>
       </section>
       <Terminal />
       <section className="examples">
