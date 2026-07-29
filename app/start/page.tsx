@@ -1,7 +1,11 @@
 import Terminal from "@/components/Terminal";
 import { COMMAND_EXAMPLES } from "@/lib/examples";
+import { listProjects } from "@/lib/projects";
+
+const RECRUITING_STATUS = new Set(["기획", "예정", "개발"]);
 
 export default function StartPage() {
+  const recruitingCount = listProjects().filter((p) => RECRUITING_STATUS.has(p.status)).length;
   return (
     <main>
       <section className="hero">
@@ -9,10 +13,25 @@ export default function StartPage() {
         <h1>
           프로젝트. 찾지말고 <b>물어보세요</b>
         </h1>
+        <a
+          href="/projects?recruiting=1"
+          style={{
+            display: "block",
+            margin: "0 auto 4px",
+            maxWidth: 640,
+            background: "#12251a",
+            border: "1px solid #2f6b3a",
+            borderRadius: 8,
+            padding: "10px 14px",
+            color: "#7CFF9B",
+            fontSize: 14,
+            textDecoration: "none",
+          }}
+        >
+          🟢 지금 <b>{recruitingCount}개</b> 프로젝트가 사람 구하는 중 — 참여하면 성과금. 합류 가능한 프로젝트 보기 →
+        </a>
         <div className="nav">
           <a href="/projects">전체 프로젝트 보기 →</a>
-          {" · "}
-          <a href="/projects?recruiting=1">지금 구인 중인 프로젝트 →</a>
         </div>
       </section>
       <Terminal />
