@@ -11,6 +11,8 @@ export default function StartPage() {
         </h1>
         <div className="nav">
           <a href="/projects">전체 프로젝트 보기 →</a>
+          {" · "}
+          <a href="/projects?recruiting=1">지금 구인 중인 프로젝트 →</a>
         </div>
       </section>
       <Terminal />

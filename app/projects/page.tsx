@@ -16,12 +16,26 @@ function loadSession(): Session | null {
   }
 }
 
+type Recruiting = {
+  id: string;
+  title: string;
+  pm: string;
+  status: string;
+  requiredSkills: string[];
+  participantCount: number | null;
+};
+
 export default function ProjectsPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [completed, setCompleted] = useState<string[]>([]);
+  const [recruitingOnly, setRecruitingOnly] = useState(false);
+  const [recruiting, setRecruiting] = useState<Recruiting[] | null>(null);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("recruiting") === "1") {
+      setRecruitingOnly(true);
+    }
     const s = loadSession();
     setSession(s);
     if (!s) return;
@@ -34,8 +48,17 @@ export default function ProjectsPage() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (recruiting !== null) return;
+    fetch("/api/recruiting")
+      .then((r) => r.json())
+      .then((d) => setRecruiting(d.ok ? d.items : []))
+      .catch(() => setRecruiting([]));
+  }, [recruiting]);
+
   const hasHistory = completed.length > 0;
   const projects = listProjects();
+  const recruitingCount = recruiting?.length ?? null;
 
   return (
     <main className="cards-page">
@@ -48,7 +71,55 @@ export default function ProjectsPage() {
       <p className="sub">
         {hasHistory ? `활동 이력 ${completed.length}건 → 등급 산출됨` : "활동 이력 없음 → 전 프로젝트 '신규' 표시 (등급 미산출)"}
       </p>
-      {projects.map((p) => {
+
+      <button
+        onClick={() => setRecruitingOnly((v) => !v)}
+        style={{
+          background: recruitingOnly ? "#1f3a24" : "#151512",
+          border: `1px solid ${recruitingOnly ? "#2f6b3a" : "#2a2a26"}`,
+          color: recruitingOnly ? "#7CFF9B" : "#c9c5b8",
+          padding: "8px 14px",
+          borderRadius: 6,
+          fontSize: 13,
+          cursor: "pointer",
+          marginBottom: 16,
+        }}
+      >
+        {recruitingOnly ? "✓ 지금 구인 중만 보기" : "지금 구인 중만 보기"}
+        {recruitingCount !== null ? ` (${recruitingCount}건)` : ""}
+      </button>
+
+      {recruitingOnly ? (
+        recruiting === null ? (
+          <p className="sub">불러오는 중…</p>
+        ) : recruiting.length === 0 ? (
+          <p className="sub">지금 구인 중인 프로젝트가 없어.</p>
+        ) : (
+          recruiting.map((p) => {
+            const overlap = p.requiredSkills.filter((s) => skills.includes(s));
+            return (
+              <div className="card" key={p.id}>
+                <div className="grade" style={{ background: "#7CFF9B22", color: "#7CFF9B" }}>
+                  합류 가능
+                </div>
+                <div>
+                  <div className="title">{p.title}</div>
+                  <div className="meta">필요 스킬: {p.requiredSkills.join(", ") || "-"}</div>
+                  <div className="meta">내 일치 스킬: {overlap.join(", ") || "없음"}</div>
+                  <div className="meta">
+                    PM: {p.pm} · 상태: {p.status}
+                    {p.participantCount !== null ? ` · 현재 ${p.participantCount}명 참여 중` : ""}
+                  </div>
+                  <div className="meta" style={{ color: "#7CFF9B" }}>
+                    터미널에서 &quot;{p.title} 신청할래&quot; 라고 말하면 합류 신청돼.
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )
+      ) : (
+      projects.map((p) => {
         const overlap = p.required_skills.filter((s) => skills.includes(s));
         const label = hasHistory ? gradeFor(skills, p.required_skills) : "신규";
         const color = GRADE_COLOR[label];
@@ -65,7 +136,8 @@ export default function ProjectsPage() {
             </div>
           </div>
         );
-      })}
+      })
+      )}
     </main>
   );
 }
